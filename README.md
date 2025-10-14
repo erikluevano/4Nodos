@@ -73,7 +73,6 @@ com.example.movilsecure_v/
 | Lenguaje principal | **Kotlin**                         | Nativo para Android, conciso y seguro.               |
 | Arquitectura       | **MVVM**                           | Separación clara entre interfaz, lógica y datos.     |
 | Framework UI       | **Jetpack Compose**                | Toolkit moderno de UI declarativa para Android.      |
-| Navegación         | **NavigationSuiteScaffold**        | Navegación adaptable de Material 3.                  |
 | Base de datos      | **Room (SQLite)**                  | Persistencia ligera para almacenar zonas frecuentes. |
 | API de mapas       | **Google Maps API**                | Obtención de rutas, ubicaciones y navegación.        |
 | IDE                | **Android Studio**                 | Entorno principal de desarrollo.                     |
