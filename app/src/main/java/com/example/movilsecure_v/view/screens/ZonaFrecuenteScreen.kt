@@ -89,7 +89,7 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier) {
                     },
                     onEliminar = {
                         viewModel.eliminarZona(it)
-                        Toast.makeText(context, "${it.nombreZona} eliminada", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(context, "${it.nombreZona} ha sido eliminada exitosamente", Toast.LENGTH_SHORT).show()
                     }
                 )
             }
@@ -105,7 +105,7 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier) {
             onGuardarZona = { nombre, direccion, lat, lon, nota ->
                 viewModel.agregarZona(nombre, direccion, lat, lon, nota)
                 showAddDialog = false
-                Toast.makeText(context, "$nombre se ha guardado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "$nombre se ha guardado exitosamente", Toast.LENGTH_SHORT).show()
             }
         )
     }
@@ -124,7 +124,7 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier) {
                 viewModel.actualizarZona(zonaActualizada)
                 showEditDialog = false
                 zonaAEditar = null // Limpiamos la zona seleccionada al guardar
-                Toast.makeText(context, "${zonaActualizada.nombreZona} se ha actualizado", Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, "${zonaActualizada.nombreZona} se ha actualizado correctamente", Toast.LENGTH_SHORT).show()
             }
         )
     }

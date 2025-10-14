@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.SwapHoriz
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
@@ -66,7 +66,7 @@ enum class AppDestinations(
     val icon: ImageVector,
 ) {
     HOME("Mapa", Icons.Default.Map),
-    FAVORITES("Zonas Frecuentes", Icons.Default.SwapHoriz),
+    FAVORITES("Zonas Frecuentes", Icons.Outlined.Star),
     PROFILE("Perfil", Icons.Default.AccountBox),
 }
 
