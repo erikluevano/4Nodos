@@ -185,4 +185,3 @@ Pulsa **Run ▶️** en Android Studio o ejecuta:
 ##  Créditos
 
 **Autor:** Alessandro Lider Tecnico del Equipo de 4 Nodos.
-**Proyecto:** *MovilSecure – Asistente de cuidado médico móvil*
