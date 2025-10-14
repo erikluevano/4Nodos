@@ -15,10 +15,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.example.movilsecure_v.view.components.map.FilterChips
-import com.example.movilsecure_v.view.components.LocationCard
-import com.example.movilsecure_v.view.components.MapPlaceholder
-import com.example.movilsecure_v.view.components.RouteDialog
-import com.example.movilsecure_v.view.components.SearchBar
+import com.example.movilsecure_v.view.components.map.LocationCard
+import com.example.movilsecure_v.view.components.map.MapPlaceholder
+import com.example.movilsecure_v.view.components.map.RouteDialog
+import com.example.movilsecure_v.view.components.map.SearchBar
 
 data class Establecimiento(
     val id: Int,
