@@ -19,6 +19,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Movil Secure"
+rootProject.name = "MovilSecure_V"
 include(":app")
- 

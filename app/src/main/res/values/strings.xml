@@ -1,3 +1,5 @@
 <resources>
-    <string name="app_name">Movil Secure</string>
+    <string name="app_name">MovilSecure_V</string>
+    <string name="iniciar_navegacion">Iniciar navegación</string>
+    <string name="cerrar_dialogo">Cerrar diálogo</string>
 </resources>

@@ -10,17 +10,12 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/Theme.MovilSecure">
-
-        <meta-data
-            android:name="com.google.android.geo.API_KEY"
-            android:value="AIzaSyAkcNEf_MJLMi78JWcGg0j_JSuLdkDGqMg"/>
-
+        android:theme="@style/Theme.MovilSecure_V">
         <activity
             android:name=".MainActivity"
             android:exported="true"
             android:label="@string/app_name"
-            android:theme="@style/Theme.MovilSecure">
+            android:theme="@style/Theme.MovilSecure_V">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
