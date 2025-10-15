@@ -27,8 +27,11 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        // 2. Hacer accesible la clave de API
+        // 1. Hacer accesible la clave de API para el Manifest (esto ya lo tenías)
         manifestPlaceholders["mapsApiKey"] = localProperties.getProperty("MAPS_API_KEY", "YOUR_API_KEY")
+
+        // 2. Exponer la clave de API al código a través de BuildConfig de forma segura
+        buildConfigField("String", "MAPS_API_KEY", "\"${localProperties.getProperty("MAPS_API_KEY")}\"")
     }
 
     buildTypes {
@@ -52,6 +55,7 @@ android {
 
     buildFeatures {
         compose = true
+        buildConfig = true // 3. Habilitar la generación de BuildConfig
     }
 
     composeOptions {
@@ -99,7 +103,13 @@ dependencies {
     androidTestImplementation(platform(libs.androidx.compose.bom))
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
 
-    // --- Google Maps ---
+    // --- Google Maps y Places ---
     implementation("com.google.maps.android:maps-compose:2.11.4")
     implementation("com.google.android.gms:play-services-maps:18.2.0")
+    implementation("com.google.android.libraries.places:places:3.4.0")
+
+    // --- Retrofit y Moshi (para llamadas a la API de Places) ---
+    implementation("com.squareup.retrofit2:retrofit:2.9.0")
+    implementation("com.squareup.retrofit2:converter-moshi:2.9.0")
+    implementation("com.squareup.moshi:moshi-kotlin:1.14.0")
 }

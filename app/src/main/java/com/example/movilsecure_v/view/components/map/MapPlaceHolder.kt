@@ -5,16 +5,20 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.rememberCameraPositionState
+import com.google.maps.android.compose.rememberMarkerState
 
 @Composable
-fun MapPlaceholder() {
-    val lima = LatLng(-12.046374, -77.042793)
+fun MapPlaceholder(locations: List<LatLng> = emptyList()) {
+    // 1. Mapa centrado en Zacatecas
+    val zacatecas = LatLng(22.7709, -102.5833)
     val cameraPositionState = rememberCameraPositionState {
-        position = CameraPosition.fromLatLngZoom(lima, 10f)
+        position = CameraPosition.fromLatLngZoom(zacatecas, 12f) // Un zoom más cercano
     }
 
     GoogleMap(
@@ -23,6 +27,13 @@ fun MapPlaceholder() {
             .height(180.dp),
         cameraPositionState = cameraPositionState
     ) {
-        // Puedes agregar marcadores aquí en el futuro
+        // 2. Itera sobre la lista de ubicaciones y crea un marcador para cada una
+        locations.forEach { location ->
+            Marker(
+                state = rememberMarkerState(position = location),
+                title = "Ubicación",
+                icon = BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED)
+            )
+        }
     }
 }

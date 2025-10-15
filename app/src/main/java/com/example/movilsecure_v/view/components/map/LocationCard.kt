@@ -3,30 +3,18 @@ package com.example.movilsecure_v.view.components.map
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.DirectionsWalk
 import androidx.compose.material.icons.filled.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.example.movilsecure_v.view.screens.Establecimiento
-
-// Función auxiliar para obtener la etiqueta y el color del tipo de establecimiento
-private fun getTypeInfo(type: String): Pair<String, Color> {
-    return when (type) {
-        "hospital" -> "Hospitales" to Color(0xFFFEE2E2) // Rojo claro
-        "clinic" -> "Clínicas" to Color(0xFFE0E7FF) // Azul claro
-        "pharmacy" -> "Farmacias" to Color(0xFFD1FAE5) // Verde claro
-        else -> "Desconocido" to Color.LightGray
-    }
-}
+import com.example.movilsecure_v.data.PlaceDetails
 
 @Composable
 fun LocationCard(
-    establecimiento: Establecimiento,
+    place: PlaceDetails,
     onViewRoute: () -> Unit
 ) {
     Card(
@@ -40,49 +28,44 @@ fun LocationCard(
             modifier = Modifier
                 .padding(16.dp)
                 .fillMaxWidth(),
-            verticalArrangement = Arrangement.spacedBy(10.dp) // Espacio uniforme entre elementos
+            verticalArrangement = Arrangement.spacedBy(12.dp) // Espacio uniforme
         ) {
-            // --- Fila 1: Nombre y Distancia ---
+            // --- Fila 1: Nombre y Calificación ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = establecimiento.name,
+                    text = place.name,
                     style = MaterialTheme.typography.titleLarge,
-                    fontWeight = FontWeight.Normal
+                    fontWeight = FontWeight.Normal,
+                    modifier = Modifier.weight(1f) // Ocupa el espacio disponible
                 )
-                Text(
-                    text = establecimiento.distance,
-                    style = MaterialTheme.typography.bodyMedium
-                )
+                // Muestra la calificación si está disponible
+                place.rating?.let { rating ->
+                    Row(verticalAlignment = Alignment.CenterVertically) {
+                        Icon(
+                            imageVector = Icons.Default.Star,
+                            contentDescription = "Calificación",
+                            tint = MaterialTheme.colorScheme.secondary,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        Text(
+                            text = rating.toString(),
+                            style = MaterialTheme.typography.bodyMedium,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                }
             }
 
-            // --- Fila 2: Etiqueta de tipo ---
-            val (typeLabel, typeColor) = getTypeInfo(establecimiento.type)
-            SuggestionChip(
-                onClick = { /* No hace nada */ },
-                label = { Text(typeLabel) },
-                colors = SuggestionChipDefaults.suggestionChipColors(containerColor = typeColor)
-            )
+            // --- Fila 2: Dirección y Horario ---
+            InfoRow(icon = Icons.Default.LocationOn, text = place.address)
+            InfoRow(icon = Icons.Default.Schedule, text = place.isOpen)
 
-            // --- Fila 3: Dirección y Horario ---
-            InfoRow(icon = Icons.Default.LocationOn, text = establecimiento.address)
-            InfoRow(icon = Icons.Default.Schedule, text = establecimiento.hours)
-
-            // --- Fila 4: Tiempos de viaje ---
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                InfoRow(icon = Icons.AutoMirrored.Filled.DirectionsWalk, text = establecimiento.walkingTime)
-                InfoRow(icon = Icons.Default.DirectionsBus, text = establecimiento.busTime)
-                InfoRow(icon = Icons.Default.DirectionsCar, text = establecimiento.carTime)
-            }
-
-            // --- Fila 5: Botón ---
+            // --- Fila 3: Botón ---
             Button(
                 onClick = onViewRoute,
                 modifier = Modifier.fillMaxWidth(),
@@ -92,7 +75,7 @@ fun LocationCard(
                 )
             ) {
                 Icon(
-                    imageVector = Icons.Default.SwapHoriz, // Icono similar al de la imagen
+                    imageVector = Icons.Default.SwapHoriz,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp)
                 )
