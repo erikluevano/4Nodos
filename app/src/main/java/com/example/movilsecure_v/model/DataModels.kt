@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.data
+package com.example.movilsecure_v.model
 
 import com.google.android.gms.maps.model.LatLng
 
@@ -13,7 +13,8 @@ data class PlaceResult(
     val geometry: Geometry,
     val vicinity: String? = null, // Dirección/vecindario
     val opening_hours: OpeningHours? = null,
-    val rating: Double? = null
+    val rating: Double? = null,
+    val place_id: String // ID único para cada lugar
 )
 
 data class Geometry(
@@ -30,8 +31,8 @@ data class OpeningHours(
 )
 
 // Nuestro propio modelo de datos simplificado para usar en la UI.
-// Esto nos independiza de la estructura de la API.
 data class PlaceDetails(
+    val id: String,
     val name: String,
     val address: String,
     val location: LatLng,

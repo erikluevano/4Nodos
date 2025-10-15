@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.example.movilsecure_v.data.PlaceDetails
+import com.example.movilsecure_v.model.PlaceDetails
 
 @Composable
 fun LocationCard(

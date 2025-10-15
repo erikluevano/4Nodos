@@ -1,5 +1,6 @@
-package com.example.movilsecure_v.data
+package com.example.movilsecure_v.model.entities
 
+import com.example.movilsecure_v.model.repository.PlacesApiService
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit

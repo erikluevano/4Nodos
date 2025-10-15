@@ -24,9 +24,6 @@ import com.example.movilsecure_v.view.components.map.SearchBar
 import com.example.movilsecure_v.viewmodel.MapViewModel
 import com.google.android.gms.maps.model.LatLng
 
-// La clase Establecimiento ya no es necesaria, la eliminaremos.
-// data class Establecimiento(...)
-
 @Composable
 fun MapaScreen(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel()) {
     var query by remember { mutableStateOf("") }
@@ -36,7 +33,6 @@ fun MapaScreen(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewM
     val places by mapViewModel.places
     val selectedPlace by mapViewModel.selectedPlace
 
-    // Muestra el RouteDialog si hay un lugar seleccionado
     selectedPlace?.let { place ->
         RouteDialog(
             place = place,
@@ -50,37 +46,56 @@ fun MapaScreen(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewM
             .fillMaxSize()
             .padding(12.dp)
     ) {
-        SearchBar(query = query, onQueryChange = { query = it })
+        SearchBar(
+            query = query,
+            onQueryChange = { newQuery ->
+                query = newQuery
+                // Si la búsqueda no está vacía, llama a la API
+                if (newQuery.isNotEmpty()) {
+                    mapViewModel.textSearchPlaces(
+                        apiKey = BuildConfig.MAPS_API_KEY,
+                        query = newQuery,
+                        location = zacatecas,
+                        radius = 5000 
+                    )
+                } else {
+                    // Si la búsqueda se borra, limpia los resultados
+                    mapViewModel.places.value = emptyList()
+                }
+            }
+        )
         Spacer(modifier = Modifier.height(8.dp))
         FilterChips(
             selectedType = selectedType,
             onTypeSelected = { type ->
                 selectedType = type
-                if (type != "all") {
+                if (type == "all") {
+                    mapViewModel.searchAllCategories(
+                        apiKey = BuildConfig.MAPS_API_KEY,
+                        location = zacatecas,
+                        radius = 5000
+                    )
+                } else {
                     mapViewModel.searchNearbyPlaces(
                         apiKey = BuildConfig.MAPS_API_KEY,
                         location = zacatecas,
                         type = type,
                         radius = 5000
                     )
-                } else {
-                    mapViewModel.places.value = emptyList()
                 }
             }
         )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // El mapa ahora extrae las coordenadas de la lista de lugares
         MapPlaceholder(locations = places.map { it.location })
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Lista de resultados
         LazyColumn(
             modifier = Modifier.fillMaxSize()
         ) {
-            items(places) { place ->
+            items(places, key = { it.id }) { place ->
                 LocationCard(
                     place = place,
                     onViewRoute = { mapViewModel.selectPlace(place) }
