@@ -1,5 +1,5 @@
 # 📱 Link para descargar la APK
->>>>>>>>  Descargar APK <<<<<<<<<<
+Descargar APK 
 
 ---
 
