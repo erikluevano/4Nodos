@@ -11,7 +11,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.MovilSecure_V">
 
-        <!-- 3. Agregar la etiqueta meta-data para la clave de API -->
+
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${mapsApiKey}" />

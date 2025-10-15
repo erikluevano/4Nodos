@@ -66,7 +66,7 @@ fun MapaScreen(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(12.dp))
 
         // Mapa placeholder (no implementas Google Map aún)
-        MapPlaceholder(count = filtered.size)
+        MapPlaceholder()
 
         Spacer(modifier = Modifier.height(12.dp))
 
