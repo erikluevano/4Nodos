@@ -14,86 +14,78 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import com.example.movilsecure_v.BuildConfig
 import com.example.movilsecure_v.view.components.map.FilterChips
 import com.example.movilsecure_v.view.components.map.LocationCard
 import com.example.movilsecure_v.view.components.map.MapPlaceholder
 import com.example.movilsecure_v.view.components.map.RouteDialog
 import com.example.movilsecure_v.view.components.map.SearchBar
+import com.example.movilsecure_v.viewmodel.MapViewModel
+import com.google.android.gms.maps.model.LatLng
 
-data class Establecimiento(
-    val id: Int,
-    val name: String,
-    val type: String,
-    val address: String,
-    val distance: String,
-    val walkingTime: String,
-    val busTime: String,
-    val carTime: String,
-    val hours: String
-)
+// La clase Establecimiento ya no es necesaria, la eliminaremos.
+// data class Establecimiento(...)
 
 @Composable
-fun MapaScreen(modifier: Modifier = Modifier) {
+fun MapaScreen(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel()) {
     var query by remember { mutableStateOf("") }
     var selectedType by remember { mutableStateOf("all") }
-    var showRouteDialog by remember { mutableStateOf(false) }
-    var selectedLocation by remember { mutableStateOf<Establecimiento?>(null) }
 
-    val locations = remember {
-        listOf(
-            Establecimiento(1, "Hospital General", "hospital", "Av. Salud 123, Centro", "1.2 km", "15 min", "8 min", "5 min", "24 horas"),
-            Establecimiento(2, "Clínica San José", "clinic", "Calle Bienestar 456, Norte", "0.8 km", "10 min", "5 min", "3 min", "7:00 - 22:00"),
-            Establecimiento(3, "Farmacia del Pueblo", "pharmacy", "Plaza Central 789, Centro", "0.3 km", "4 min", "2 min", "1 min", "24 horas")
+    val zacatecas = LatLng(22.7709, -102.5833)
+    val places by mapViewModel.places
+    val selectedPlace by mapViewModel.selectedPlace
+
+    // Muestra el RouteDialog si hay un lugar seleccionado
+    selectedPlace?.let { place ->
+        RouteDialog(
+            place = place,
+            onClose = { mapViewModel.clearSelectedPlace() },
+            onStartNavigation = { /* Lógica de navegación futura */ }
         )
     }
 
-    val filtered = locations.filter { loc ->
-        (selectedType == "all" || loc.type == selectedType) &&
-                (loc.name.contains(query, ignoreCase = true) || loc.address.contains(query, ignoreCase = true))
-    }
-
-    // 2. Aplicamos el modifier recibido al componente raíz (Column).
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(12.dp)
     ) {
-        // Search bar + chips
         SearchBar(query = query, onQueryChange = { query = it })
         Spacer(modifier = Modifier.height(8.dp))
-        FilterChips(selectedType = selectedType, onTypeSelected = { selectedType = it })
+        FilterChips(
+            selectedType = selectedType,
+            onTypeSelected = { type ->
+                selectedType = type
+                if (type != "all") {
+                    mapViewModel.searchNearbyPlaces(
+                        apiKey = BuildConfig.MAPS_API_KEY,
+                        location = zacatecas,
+                        type = type,
+                        radius = 5000
+                    )
+                } else {
+                    mapViewModel.places.value = emptyList()
+                }
+            }
+        )
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        // Mapa placeholder (no implementas Google Map aún)
-        MapPlaceholder()
+        // El mapa ahora extrae las coordenadas de la lista de lugares
+        MapPlaceholder(locations = places.map { it.location })
 
         Spacer(modifier = Modifier.height(12.dp))
 
         // Lista de resultados
-        LazyColumn(modifier = Modifier.fillMaxSize()) {
-            items(filtered) { loc ->
+        LazyColumn(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            items(places) { place ->
                 LocationCard(
-                    establecimiento = loc,
-                    onViewRoute = {
-                        selectedLocation = loc
-                        showRouteDialog = true
-                    }
+                    place = place,
+                    onViewRoute = { mapViewModel.selectPlace(place) }
                 )
-                Spacer(modifier = Modifier.height(8.dp))
             }
         }
-    }
-
-    // Dialog para seleccionar ruta (simulado)
-    if (showRouteDialog && selectedLocation != null) {
-        RouteDialog(
-            location = selectedLocation!!,
-            onClose = { showRouteDialog = false },
-            onStartNavigation = {
-                // Aquí iría la llamada al ViewModel para iniciar navegación
-                showRouteDialog = false
-            }
-        )
     }
 }
