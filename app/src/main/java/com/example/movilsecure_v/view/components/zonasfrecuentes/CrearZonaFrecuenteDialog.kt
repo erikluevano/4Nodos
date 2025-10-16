@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.movilsecure_v.model.UbicacionResult
 
 private enum class AddMethod { MAP, TEXT }
 
@@ -27,8 +28,10 @@ private enum class AddMethod { MAP, TEXT }
  */
 @Composable
 fun CrearZonaFrecuenteDialog(
+    ubicacionInicial: UbicacionResult? = null,
     onDismissRequest: () -> Unit,
-    onGuardarZona: (nombre: String, direccion: String, lat: Double, lon: Double, nota: String?) -> Unit
+    onGuardarZona: (nombre: String, direccion: String, lat: Double, lon: Double, nota: String?) -> Unit,
+    onSeleccionarUbicacionClick: () -> Unit
 ) {
     // --- 1. GESTIÓN DEL ESTADO INTERNO ---
     var nombre by remember { mutableStateOf("") }
@@ -38,12 +41,15 @@ fun CrearZonaFrecuenteDialog(
 
     // Simula una ubicación seleccionada del mapa. En una implementación real,
     // esto se actualizaría al volver de la pantalla del mapa con un resultado.
-    var ubicacionSeleccionada by remember { mutableStateOf<String?>(null) }
-
+    //var ubicacionSeleccionada by remember { mutableStateOf<String?>(null) }
+    var ubicacionSeleccionada by remember(ubicacionInicial) {
+        mutableStateOf(ubicacionInicial)
+    }
     // --- 2. VALIDACIÓN DEL FORMULARIO ---
-    val isFormValid = nombre.isNotBlank() &&
-            ( (addMethod == AddMethod.TEXT && direccion.isNotBlank()) ||
-                    (addMethod == AddMethod.MAP && ubicacionSeleccionada != null) )
+    //val isFormValid = nombre.isNotBlank() &&
+      //      ( (addMethod == AddMethod.TEXT && direccion.isNotBlank()) ||
+        //            (addMethod == AddMethod.MAP && ubicacionSeleccionada != null) )
+    val isFormValid = nombre.isNotBlank() && ubicacionSeleccionada != null
 
     // --- 3. CONSTRUCCIÓN DEL DIÁLOGO ---
     Dialog(onDismissRequest = onDismissRequest) {
@@ -85,9 +91,10 @@ fun CrearZonaFrecuenteDialog(
                                     shape = RoundedCornerShape(8.dp)
                                 )
                                 .clickable {
+                                    onSeleccionarUbicacionClick()
                                     // TODO: Navegar a la pantalla del mapa para seleccionar una ubicación.
                                     // Por ahora, simulamos una selección para la prueba.
-                                    ubicacionSeleccionada = "Av. Siempre Viva 742"
+                                    //ubicacionSeleccionada = "Av. Siempre Viva 742"
                                 },
                             contentAlignment = Alignment.Center
                         ) {
@@ -140,11 +147,13 @@ fun CrearZonaFrecuenteDialog(
                     Button(
                         onClick = {
                             val finalDireccion = if (addMethod == AddMethod.MAP) ubicacionSeleccionada!! else direccion
+                            val ubicacion = ubicacionSeleccionada!!
                             onGuardarZona(
                                 nombre.trim(),
-                                finalDireccion.trim(),
-                                0.0, // TODO: Reemplazar con latitud real obtenida del mapa
-                                0.0, // TODO: Reemplazar con longitud real obtenida del mapa
+                                ubicacion.direccion.trim(),
+                                ubicacion.latitud,
+                                ubicacion.longitud,
+                                //finalDireccion.trim(),
                                 nota.trim().takeIf { it.isNotEmpty() }
                             )
                         },

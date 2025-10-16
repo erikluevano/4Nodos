@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -20,6 +21,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavHostController
+import com.example.movilsecure_v.model.UbicacionResult
 import com.example.movilsecure_v.model.database.AppDatabase
 import com.example.movilsecure_v.model.entities.ZonaFrecuente // NUEVO: Importar ZonaFrecuente
 import com.example.movilsecure_v.model.repository.ZonaFrecuenteRepository
@@ -31,7 +34,7 @@ import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModel
 import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModelFactory
 
 @Composable
-fun ZonasFrecuentesScreen(modifier: Modifier = Modifier) {
+fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostController) {
     // --- 1. CONFIGURACIÓN DEL VIEWMODEL ---
     val context = LocalContext.current
     val factory = ZonaFrecuenteViewModelFactory(
@@ -46,10 +49,42 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier) {
 
     // --- 3. ESTADO PARA CONTROLAR LA VISIBILIDAD DE LOS DIÁLOGOS ---
     var showAddDialog by remember { mutableStateOf(false) }
+    var ubicacionRecibida by remember { mutableStateOf<UbicacionResult?>(null) }
+
+    val navBackStackEntry = navController.currentBackStackEntry
+    val savedStateHandle = navBackStackEntry?.savedStateHandle
+
     // NUEVO: Estados para controlar el diálogo de edición
     var showEditDialog by remember { mutableStateOf(false) }
     var zonaAEditar by remember { mutableStateOf<ZonaFrecuente?>(null) }
 
+    LaunchedEffect(savedStateHandle) {
+        savedStateHandle?.get<UbicacionResult>("ubicacion_seleccionada")?.let { resultado ->
+            ubicacionRecibida = resultado
+            showAddDialog = true
+            savedStateHandle.remove<UbicacionResult>("ubicacion_seleccionada")
+        }
+    }
+
+    if (showAddDialog) {
+        CrearZonaFrecuenteDialog(
+            ubicacionInicial = ubicacionRecibida,
+            onDismissRequest = {
+                showAddDialog = false
+                ubicacionRecibida = null
+            },
+            onSeleccionarUbicacionClick = {
+                showAddDialog = false
+                navController.navigate("seleccionarUbicacion")
+            },
+            onGuardarZona = { nombre, direccion, lat, lon, nota ->
+                viewModel.agregarZona(nombre, direccion, lat, lon, nota)
+                showAddDialog = false
+                ubicacionRecibida = null
+                Toast.makeText(context, "$nombre se ha guardado exitosamente", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
 
     // --- 4. DISEÑO DE LA PANTALLA ---
     Column(
@@ -101,12 +136,20 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier) {
     // Diálogo para AÑADIR una nueva zona
     if (showAddDialog) {
         CrearZonaFrecuenteDialog(
-            onDismissRequest = { showAddDialog = false },
+            ubicacionInicial = ubicacionRecibida,
+            onDismissRequest = {
+                showAddDialog = false
+                ubicacionRecibida = null },
+            onSeleccionarUbicacionClick = {
+                showAddDialog = false
+                navController.navigate("seleccionarUbicacion")
+            },
             onGuardarZona = { nombre, direccion, lat, lon, nota ->
                 viewModel.agregarZona(nombre, direccion, lat, lon, nota)
                 showAddDialog = false
+                ubicacionRecibida = null
                 Toast.makeText(context, "$nombre se ha guardado exitosamente", Toast.LENGTH_SHORT).show()
-            }
+            },
         )
     }
 

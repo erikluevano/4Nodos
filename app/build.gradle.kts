@@ -7,6 +7,8 @@ plugins {
 
     // Apply the KSP plugin for this module
     id("com.google.devtools.ksp")
+
+    id("kotlin-parcelize")
 }
 
 val localProperties = Properties()
@@ -17,12 +19,12 @@ if (localPropertiesFile.exists()) {
 
 android {
     namespace = "com.example.movilsecure_v"
-    compileSdk = 34
+    compileSdk = 35
 
     defaultConfig {
         applicationId = "com.example.movilsecure_v"
         minSdk = 24
-        targetSdk = 34
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
@@ -64,6 +66,7 @@ android {
 }
 
 dependencies {
+    implementation(libs.androidx.navigation.compose)
     val room_version = "2.6.1"
     // --- Core Android y Jetpack ---
     implementation(libs.androidx.core.ktx)

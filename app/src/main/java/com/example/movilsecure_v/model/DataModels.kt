@@ -1,6 +1,8 @@
 package com.example.movilsecure_v.model
 
 import com.google.android.gms.maps.model.LatLng
+import android.os.Parcelable
+import kotlinx.parcelize.Parcelize
 
 // Clase principal que representa la respuesta de la API de Places
 data class PlacesResponse(
@@ -39,3 +41,10 @@ data class PlaceDetails(
     val isOpen: String,
     val rating: Double?
 )
+
+@Parcelize // Anotación importante
+data class UbicacionResult(
+    val direccion: String,
+    val latitud: Double,
+    val longitud: Double
+) : Parcelable // Implementar Parcelable

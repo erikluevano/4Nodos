@@ -12,13 +12,19 @@ import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
-import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.navigation.NavGraph.Companion.findStartDestination
+import androidx.navigation.compose.NavHost
+import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
 import com.example.movilsecure_v.ui.theme.MovilSecure_VTheme
 import com.example.movilsecure_v.view.screens.MapaScreen
+import com.example.movilsecure_v.view.screens.SeleccionarUbicacionScreen
+//import com.example.movilsecure_v.view.screens.UbicacionResult
 import com.example.movilsecure_v.view.screens.ZonasFrecuentesScreen
 
 
@@ -36,57 +42,86 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MovilSecure_VApp() {
-    var currentDestination by rememberSaveable { mutableStateOf(AppDestinations.HOME) }
+    // CAMBIO 1: Crear el NavController, que será la fuente de verdad para la navegación
+    val navController = rememberNavController()
+    // Obtenemos la ruta actual para saber qué ítem de la barra de navegación resaltar
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            AppDestinations.entries.forEach {
+            // CAMBIO 2: El onClick ahora navega usando el navController
+            AppDestinations.entries.forEach { destination ->
                 item(
-                    icon = { Icon(it.icon, contentDescription = it.label) },
-                    label = { Text(it.label) },
-                    selected = it == currentDestination,
-                    onClick = { currentDestination = it }
+                    icon = { Icon(destination.icon, contentDescription = destination.label) },
+                    label = { Text(destination.label) },
+                    // CAMBIO 3: El ítem se selecciona si su ruta coincide con la ruta actual
+                    selected = currentRoute == destination.route,
+                    onClick = {
+                        navController.navigate(destination.route) {
+                            // Lógica para evitar apilar la misma pantalla múltiples veces
+                            popUpTo(navController.graph.findStartDestination().id) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
                 )
             }
         }
     ) {
-        Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-            when (currentDestination) {
-                // Llama a la nueva MapaScreen importada, pasándole el padding
-                AppDestinations.HOME -> MapaScreen(modifier = Modifier.padding(innerPadding))
-                AppDestinations.FAVORITES -> ZonasFrecuentesScreen(modifier = Modifier.padding(innerPadding))
-                AppDestinations.PROFILE -> PlaceholderScreen("Perfil del Cuidador", innerPadding)
+        // CAMBIO 4: El 'when' se reemplaza por un NavHost que contiene todas las pantallas
+        NavHost(
+            navController = navController,
+            startDestination = AppDestinations.HOME.route, // La ruta inicial
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // --- Destinos de la barra de navegación ---
+            composable(route = AppDestinations.HOME.route) {
+                MapaScreen(modifier = Modifier.fillMaxSize())
+            }
+            composable(route = AppDestinations.FAVORITES.route) {
+                // Pasamos el navController a la pantalla que lo necesita
+                ZonasFrecuentesScreen(navController = navController, modifier = Modifier.fillMaxSize())
+            }
+            composable(route = AppDestinations.PROFILE.route) {
+                PlaceholderScreen("Perfil del Cuidador")
+            }
+
+            // --- Otros destinos (que no están en la barra de navegación) ---
+            composable(route = "seleccionarUbicacion") {
+                SeleccionarUbicacionScreen(
+                    onCancelar = { navController.popBackStack() },
+                    onUbicacionSeleccionada = { resultado ->
+                        navController.previousBackStackEntry
+                            ?.savedStateHandle
+                            ?.set("ubicacion_seleccionada", resultado)
+                        navController.popBackStack()
+                    }
+                )
             }
         }
     }
 }
 
+// CAMBIO 5: Añadimos una propiedad 'route' al enum para que sea más robusto
 enum class AppDestinations(
+    val route: String,
     val label: String,
     val icon: ImageVector,
 ) {
-    HOME("Mapa", Icons.Default.Map),
-    FAVORITES("Zonas Frecuentes", Icons.Outlined.Star),
-    PROFILE("Perfil", Icons.Default.AccountBox),
+    HOME("mapa", "Mapa", Icons.Default.Map),
+    FAVORITES("zonas_frecuentes", "Zonas Frecuentes", Icons.Outlined.Star),
+    PROFILE("perfil", "Perfil", Icons.Default.AccountBox),
 }
 
-// Pantallas simuladas para otras secciones
 @Composable
-fun PlaceholderScreen(title: String, innerPadding: PaddingValues) {
+fun PlaceholderScreen(title: String, modifier: Modifier = Modifier) {
     Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(innerPadding),
+        modifier = modifier.fillMaxSize(),
         contentAlignment = Alignment.Center
     ) {
         Text(text = title, style = MaterialTheme.typography.titleLarge)
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun MovilSecurePreview() {
-    MovilSecure_VTheme {
-        MovilSecure_VApp()
     }
 }
