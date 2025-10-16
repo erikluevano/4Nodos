@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.model
+package com.example.movilsecure_v.model.entities
 
 import com.google.android.gms.maps.model.LatLng
 
@@ -12,7 +12,7 @@ data class PlaceResult(
     val name: String,
     val geometry: Geometry,
     val vicinity: String? = null, // Dirección/vecindario
-    val opening_hours: OpeningHours? = null,
+    val openingHours: OpeningHours? = null,
     val rating: Double? = null,
     val place_id: String // ID único para cada lugar
 )
@@ -37,5 +37,19 @@ data class PlaceDetails(
     val address: String,
     val location: LatLng,
     val isOpen: String,
+    val rating: Double?
+)
+
+data class PlaceDetailsResponse(
+    val result: PlaceDetailsResult
+)
+
+data class PlaceDetailsResult(
+    val place_id: String,
+    val name: String,
+    val vicinity: String?,
+    val formatted_address: String?,
+    val geometry: Geometry,
+    val opening_hours: OpeningHours?,
     val rating: Double?
 )
