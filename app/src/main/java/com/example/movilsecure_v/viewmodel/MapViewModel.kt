@@ -3,96 +3,102 @@ package com.example.movilsecure_v.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.movilsecure_v.model.PlaceDetails
-import com.example.movilsecure_v.model.PlaceResult
-import com.example.movilsecure_v.model.entities.PlacesClient
+import com.example.movilsecure_v.model.entities.PlaceDetails
+import com.example.movilsecure_v.model.entities.PlaceDetailsResult
+import com.example.movilsecure_v.model.repository.PlacesClient
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
 class MapViewModel : ViewModel() {
+    // ... (los estados no cambian)
     val places = mutableStateOf<List<PlaceDetails>>(emptyList())
-    val selectedPlace = mutableStateOf<PlaceDetails?>(null)
+    val selectedPlaceForRoute = mutableStateOf<PlaceDetails?>(null)
+    val selectedCardPlace = mutableStateOf<PlaceDetails?>(null)
 
-    private val allCategories = listOf("hospital", "pharmacy", "clinic")
-
-    // Búsqueda por tipo (para los chips de filtro)
-    fun searchNearbyPlaces(apiKey: String, location: LatLng, type: String, radius: Int) {
-        viewModelScope.launch {
-            try {
-                val response = PlacesClient.service.searchNearby(
-                    location = "${location.latitude},${location.longitude}",
-                    radius = radius,
-                    type = type,
-                    apiKey = apiKey
-                )
-                places.value = response.results.map { it.toPlaceDetails() }
-            } catch (e: Exception) {
-                places.value = emptyList()
-                e.printStackTrace()
-            }
-        }
-    }
-    
-    // Nueva búsqueda por texto (para la SearchBar)
+    // --- FUNCIÓN MODIFICADA PARA LA BARRA DE BÚSQUEDA ---
     fun textSearchPlaces(apiKey: String, query: String, location: LatLng, radius: Int) {
         viewModelScope.launch {
             try {
-                val response = PlacesClient.service.textSearch(
+                // 1. Limpiamos la lista anterior para mostrar que algo está cargando
+                places.value = emptyList()
+
+                // 2. Hacemos la búsqueda por texto inicial para obtener la lista de lugares
+                val locationStr = "${location.latitude},${location.longitude}"
+                val searchResponse = PlacesClient.service.textSearch(
                     query = query,
-                    location = "${location.latitude},${location.longitude}",
+                    location = locationStr,
                     radius = radius,
                     apiKey = apiKey
                 )
-                places.value = response.results.map { it.toPlaceDetails() }
+
+                if (searchResponse.results.isEmpty()) {
+                    return@launch // No hay nada que hacer si no hay resultados
+                }
+
+                // 3. Para cada resultado, lanzamos una llamada de "details" en paralelo
+                val detailedPlaces = searchResponse.results.map { placeResult ->
+                    // Usamos 'async' para que cada llamada a la API se ejecute concurrentemente
+                    async {
+                        try {
+                            val detailsResponse = PlacesClient.service.getPlaceDetails(
+                                placeId = placeResult.place_id,
+                                apiKey = apiKey
+                            )
+                            // Usamos la función de conversión que ya teníamos para los detalles
+                            detailsResponse.result.toPlaceDetails()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            null // Si una llamada individual falla, devolvemos null
+                        }
+                    }
+                }.awaitAll() // Esperamos a que TODAS las llamadas de 'details' terminen
+
+                // 4. Filtramos los resultados que pudieron fallar (nulos) y actualizamos la UI
+                places.value = detailedPlaces.filterNotNull()
+
             } catch (e: Exception) {
-                places.value = emptyList()
                 e.printStackTrace()
+                places.value = emptyList()
             }
         }
     }
 
-    // Búsqueda en todas las categorías (para el chip "Todos")
-    fun searchAllCategories(apiKey: String, location: LatLng, radius: Int) {
+    fun getPlaceDetailsById(apiKey: String, placeId: String) {
         viewModelScope.launch {
             try {
-                val deferredResults = allCategories.map { category ->
-                    async {
-                        PlacesClient.service.searchNearby(
-                            location = "${location.latitude},${location.longitude}",
-                            radius = radius,
-                            type = category,
-                            apiKey = apiKey
-                        ).results
-                    }
-                }
-                val allResults = deferredResults.awaitAll().flatten()
-                
-                places.value = allResults
-                    .map { it.toPlaceDetails() }
-                    .distinctBy { it.id }
+                val response = PlacesClient.service.getPlaceDetails(
+                    placeId = placeId,
+                    apiKey = apiKey
+                )
+                selectedCardPlace.value = response.result.toPlaceDetails()
             } catch (e: Exception) {
-                places.value = emptyList()
                 e.printStackTrace()
+                selectedCardPlace.value = null
             }
         }
     }
 
-    fun selectPlace(place: PlaceDetails) {
-        selectedPlace.value = place
+    // --- Funciones de utilidad ---
+    fun selectPlaceForRoute(place: PlaceDetails) {
+        selectedPlaceForRoute.value = place
     }
 
-    fun clearSelectedPlace() {
-        selectedPlace.value = null
+    fun clearSelectedPlaceForRoute() {
+        selectedPlaceForRoute.value = null
+    }
+
+    fun clearSelectedCardPlace() {
+        selectedCardPlace.value = null
     }
 }
 
-private fun PlaceResult.toPlaceDetails(): PlaceDetails {
+private fun PlaceDetailsResult.toPlaceDetails(): PlaceDetails {
     return PlaceDetails(
         id = this.place_id,
         name = this.name,
-        address = this.vicinity ?: "Dirección no disponible",
+        address = this.formatted_address ?: this.vicinity ?: "Dirección no encontrada",
         location = LatLng(this.geometry.location.lat, this.geometry.location.lng),
         isOpen = when (this.opening_hours?.open_now) {
             true -> "Abierto ahora"

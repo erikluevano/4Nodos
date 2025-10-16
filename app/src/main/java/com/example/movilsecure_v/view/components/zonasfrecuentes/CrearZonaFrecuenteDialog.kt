@@ -15,7 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.movilsecure_v.model.UbicacionResult
+import com.example.movilsecure_v.model.entities.UbicacionResult
 
 private enum class AddMethod { MAP, TEXT }
 

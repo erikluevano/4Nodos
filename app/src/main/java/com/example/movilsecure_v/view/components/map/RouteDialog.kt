@@ -1,22 +1,24 @@
 package com.example.movilsecure_v.view.components.map
 
-import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
-import com.example.movilsecure_v.model.PlaceDetails
+import com.example.movilsecure_v.model.entities.PlaceDetails
+// NUEVAS IMPORTACIONES PARA EL MAPA
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun RouteDialog(
@@ -24,6 +26,11 @@ fun RouteDialog(
     onClose: () -> Unit,
     onStartNavigation: () -> Unit
 ) {
+    // Se centra en la ubicación del lugar con un zoom adecuado
+    val cameraPositionState = rememberCameraPositionState {
+        position = CameraPosition.fromLatLngZoom(place.location, 15f)
+    }
+
     Dialog(onDismissRequest = onClose) {
         Card(
             shape = RoundedCornerShape(16.dp),
@@ -40,25 +47,26 @@ fun RouteDialog(
                 )
                 Spacer(modifier = Modifier.height(20.dp))
 
-                // 2. Información de Origen y Destino
-                LocationInfo(
-                    label = "Desde",
-                    details = "Tu ubicación actual",
-                    color = Color(0xFF16A34A) // Verde
-                )
-                Icon(
-                    imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                    contentDescription = null,
+                // 2. MAPA DE GOOGLE
+                Box(
                     modifier = Modifier
-                        .align(Alignment.CenterHorizontally)
-                        .padding(vertical = 8.dp),
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                LocationInfo(
-                    label = "Hasta",
-                    details = place.address,
-                    color = Color(0xFFDC2626) // Rojo
-                )
+                        .fillMaxWidth()
+                        .height(200.dp) // Altura del mapa dentro del diálogo
+                        .clip(RoundedCornerShape(12.dp)) // Esquinas redondeadas para el mapa
+                ) {
+                    GoogleMap(
+                        modifier = Modifier.fillMaxSize(),
+                        cameraPositionState = cameraPositionState
+                    ) {
+                        // Marcador en la ubicación del destino
+                        Marker(
+                            state = MarkerState(position = place.location),
+                            title = place.name,
+                            snippet = place.address
+                        )
+                    }
+                }
+
                 Spacer(modifier = Modifier.height(24.dp))
 
                 // 3. Botones de acción
@@ -89,31 +97,6 @@ private fun DialogHeader(locationName: String, onClose: () -> Unit) {
         )
         IconButton(onClick = onClose) {
             Icon(imageVector = Icons.Default.Close, contentDescription = "Cerrar")
-        }
-    }
-}
-
-@Composable
-private fun LocationInfo(label: String, details: String, color: Color) {
-    Surface(
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f),
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
-        ) {
-            Box(
-                modifier = Modifier
-                    .size(12.dp)
-                    .background(color, CircleShape)
-            )
-            Spacer(modifier = Modifier.width(12.dp))
-            Column {
-                Text(label, fontWeight = FontWeight.Bold, fontSize = 16.sp)
-                Text(details, fontSize = 14.sp, color = MaterialTheme.colorScheme.onSurfaceVariant)
-            }
         }
     }
 }

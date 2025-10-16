@@ -22,7 +22,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.movilsecure_v.model.UbicacionResult
+import com.example.movilsecure_v.model.entities.UbicacionResult
 import com.example.movilsecure_v.model.database.AppDatabase
 import com.example.movilsecure_v.model.entities.ZonaFrecuente // NUEVO: Importar ZonaFrecuente
 import com.example.movilsecure_v.model.repository.ZonaFrecuenteRepository

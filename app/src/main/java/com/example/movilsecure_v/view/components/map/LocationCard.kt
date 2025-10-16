@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.example.movilsecure_v.model.PlaceDetails
+import com.example.movilsecure_v.model.entities.PlaceDetails
 
 @Composable
 fun LocationCard(
@@ -30,7 +30,7 @@ fun LocationCard(
                 .fillMaxWidth(),
             verticalArrangement = Arrangement.spacedBy(12.dp) // Espacio uniforme
         ) {
-            // --- Fila 1: Nombre y Calificación ---
+            // --- Fila 1: Nombre ----
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -42,23 +42,7 @@ fun LocationCard(
                     fontWeight = FontWeight.Normal,
                     modifier = Modifier.weight(1f) // Ocupa el espacio disponible
                 )
-                // Muestra la calificación si está disponible
-                place.rating?.let { rating ->
-                    Row(verticalAlignment = Alignment.CenterVertically) {
-                        Icon(
-                            imageVector = Icons.Default.Star,
-                            contentDescription = "Calificación",
-                            tint = MaterialTheme.colorScheme.secondary,
-                            modifier = Modifier.size(18.dp)
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
-                        Text(
-                            text = rating.toString(),
-                            style = MaterialTheme.typography.bodyMedium,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
+
             }
 
             // --- Fila 2: Dirección y Horario ---

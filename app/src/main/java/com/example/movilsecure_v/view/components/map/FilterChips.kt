@@ -19,9 +19,7 @@ private val types = listOf(
 
 @Composable
 fun FilterChips(selectedType: String, onTypeSelected: (String) -> Unit) {
-    // Cambiamos Row por LazyRow para que sea desplazable horizontalmente
     LazyRow(modifier = Modifier.padding(start = 4.dp, end = 4.dp)) {
-        // Usamos items para iterar en un LazyRow
         items(types) { (id, label) ->
             Button(
                 onClick = { onTypeSelected(id) },
