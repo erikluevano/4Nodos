@@ -48,7 +48,6 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // NUEVA FUNCIÓN PARA BÚSQUEDA POR TIPO (NEARBY SEARCH)
     fun nearbySearchPlaces(apiKey: String, type: String, location: LatLng, radius: Int) {
         viewModelScope.launch {
             try {
@@ -118,6 +117,7 @@ private fun PlaceDetailsResult.toPlaceDetails(): PlaceDetails {
             false -> "Cerrado"
             null -> "Horario no disponible"
         },
-        rating = this.rating
+        rating = this.rating,
+        phoneNumber = this.formatted_phone_number // NUEVO: Mapear el número de teléfono
     )
 }

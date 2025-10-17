@@ -39,7 +39,8 @@ data class PlaceDetails(
     val address: String,
     val location: LatLng,
     val isOpen: String,
-    val rating: Double?
+    val rating: Double?,
+    val phoneNumber: String? // NUEVO: Número de teléfono
 )
 
 data class PlaceDetailsResponse(
@@ -53,7 +54,8 @@ data class PlaceDetailsResult(
     val formatted_address: String?,
     val geometry: Geometry,
     val opening_hours: OpeningHours?,
-    val rating: Double?
+    val rating: Double?,
+    val formatted_phone_number: String? // NUEVO: Número de teléfono
 )
 
 @Parcelize // Anotación importante

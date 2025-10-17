@@ -20,7 +20,7 @@ interface PlacesApiService {
     suspend fun getPlaceDetails(
         @Query("place_id") placeId: String,
         @Query("key") apiKey: String,
-        @Query("fields") fields: String = "place_id,name,vicinity,formatted_address,geometry,opening_hours,rating"
+        @Query("fields") fields: String = "place_id,name,vicinity,formatted_address,geometry,opening_hours,rating,formatted_phone_number"
     ): PlaceDetailsResponse
 
     @GET("maps/api/place/nearbysearch/json")
