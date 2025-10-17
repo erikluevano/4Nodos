@@ -2,6 +2,7 @@ package com.example.movilsecure_v.view.components.zonasfrecuentes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -30,9 +31,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.movilsecure_v.model.entities.ZonaFrecuente
 
-/**
- * Tarjeta que muestra los detalles de una única Zona Frecuente.
- */
+
 @Composable
 fun ZonaFrecuenteCard(
     zona: ZonaFrecuente,
@@ -50,7 +49,7 @@ fun ZonaFrecuenteCard(
             modifier = Modifier.padding(16.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            // Fila de Título y Tag
+            // Fila de Título y Tag (sin cambios)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = zona.nombreZona,
@@ -71,7 +70,7 @@ fun ZonaFrecuenteCard(
                 }
             }
 
-            // Fila de Dirección
+            // Fila de Dirección (sin cambios)
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
                     imageVector = Icons.Default.LocationOn,
@@ -87,7 +86,7 @@ fun ZonaFrecuenteCard(
                 )
             }
 
-            // Nota (si existe)
+            // Nota (si existe) (sin cambios)
             if (!zona.notaZona.isNullOrBlank()) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -104,22 +103,35 @@ fun ZonaFrecuenteCard(
                 }
             }
 
-            // Botones de Acción
+            // --- SECCIÓN DE BOTONES MODIFICADA ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                horizontalArrangement = Arrangement.SpaceAround, // SpaceAround da un poco más de aire en los bordes
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                OutlinedButton(onClick = { onVerRuta(zona) }, modifier = Modifier.weight(1f)) {
+                // Definimos un padding más compacto para los botones
+                val buttonPadding = PaddingValues(horizontal = 12.dp, vertical = 8.dp)
+
+                OutlinedButton(
+                    onClick = { onVerRuta(zona) },
+                    contentPadding = buttonPadding // <-- CAMBIO: Aplicamos el padding compacto
+                ) {
                     Icon(Icons.Default.Route, contentDescription = "Ver Ruta", modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
                     Text("Ver ruta")
                 }
-                OutlinedButton(onClick = { onModificar(zona) }, modifier = Modifier.weight(1f)) {
+                OutlinedButton(
+                    onClick = { onModificar(zona) },
+                    contentPadding = buttonPadding // <-- CAMBIO: Aplicamos el padding compacto
+                ) {
                     Icon(Icons.Default.Edit, contentDescription = "Modificar", modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
                     Text("Modificar")
                 }
-                OutlinedButton(onClick = { onEliminar(zona) }, modifier = Modifier.weight(1f)) {
+                OutlinedButton(
+                    onClick = { onEliminar(zona) },
+                    contentPadding = buttonPadding // <-- CAMBIO: Aplicamos el padding compacto
+                ) {
                     Icon(Icons.Default.Delete, contentDescription = "Eliminar", modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
                     Text("Eliminar")

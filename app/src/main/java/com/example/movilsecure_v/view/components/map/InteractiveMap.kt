@@ -7,14 +7,18 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.example.movilsecure_v.model.entities.PlaceDetails
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
 
 @Composable
 fun InteractiveMap(
     modifier: Modifier = Modifier,
+    places: List<PlaceDetails>,
     onPOIClick: (placeId: String) -> Unit
 ) {
     val zacatecas = LatLng(22.7709, -102.5833)
@@ -30,13 +34,21 @@ fun InteractiveMap(
         GoogleMap(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(250.dp), // Dale una altura considerable para que sea usable
+                .height(250.dp),
             cameraPositionState = cameraPositionState,
             onPOIClick = { poi ->
-                // Cuando se hace clic en un POI, llamamos a la lambda
-                // con el ID del lugar para que el ViewModel lo procese.
                 onPOIClick(poi.placeId)
             }
-        )
+        ) {
+            // --- NUEVA LÓGICA ---
+            // Iteramos sobre la lista de lugares y creamos un marcador para cada uno
+            places.forEach { place ->
+                Marker(
+                    state = MarkerState(position = place.location),
+                    title = place.name,
+                    snippet = place.address
+                )
+            }
+        }
     }
 }

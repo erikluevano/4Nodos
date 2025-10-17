@@ -68,6 +68,8 @@ class MapViewModel : ViewModel() {
     fun getPlaceDetailsById(apiKey: String, placeId: String) {
         viewModelScope.launch {
             try {
+                places.value = emptyList()
+
                 val response = PlacesClient.service.getPlaceDetails(
                     placeId = placeId,
                     apiKey = apiKey
