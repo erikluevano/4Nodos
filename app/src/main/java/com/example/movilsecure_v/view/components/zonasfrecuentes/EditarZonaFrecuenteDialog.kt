@@ -1,15 +1,19 @@
 package com.example.movilsecure_v.view.components.zonasfrecuentes
 
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import com.example.movilsecure_v.model.entities.UbicacionResult
 import com.example.movilsecure_v.model.entities.ZonaFrecuente
 
 /**
@@ -18,23 +22,30 @@ import com.example.movilsecure_v.model.entities.ZonaFrecuente
  * @param zona La zona frecuente original que se va a editar.
  * @param onDismissRequest Se llama cuando el usuario solicita cerrar el diálogo.
  * @param onGuardarCambios Se llama cuando el usuario pulsa "Guardar cambios", proporcionando la zona con los datos actualizados.
+ * @param onSeleccionarUbicacionClick Se llama cuando el usuario pulsa para seleccionar una nueva ubicación en el mapa.
+ * @param ubicacionInicial La nueva ubicación seleccionada desde el mapa (si existe).
  */
 @Composable
 fun EditarZonaFrecuenteDialog(
     zona: ZonaFrecuente,
     onDismissRequest: () -> Unit,
-    onGuardarCambios: (ZonaFrecuente) -> Unit
+    onGuardarCambios: (ZonaFrecuente) -> Unit,
+    onSeleccionarUbicacionClick: () -> Unit,
+    ubicacionInicial: UbicacionResult? = null
 ) {
     // --- 1. GESTIÓN DEL ESTADO INTERNO ---
-    // El estado se inicializa con los datos de la 'zona' que recibimos.
-    // Usamos 'zona.id' como clave para que 'remember' reinicie el estado si el
-    // diálogo se abre para una zona diferente, evitando datos obsoletos.
     var nombre by remember(zona.id) { mutableStateOf(zona.nombreZona) }
-    var direccion by remember(zona.id) { mutableStateOf(zona.direccionZona ?: "") }
     var nota by remember(zona.id) { mutableStateOf(zona.notaZona ?: "") }
 
+    // El estado de la ubicación seleccionada se actualiza si se proporciona una nueva (desde el mapa).
+    var ubicacionSeleccionada by remember(ubicacionInicial) {
+        mutableStateOf(ubicacionInicial)
+    }
+
     // --- 2. VALIDACIÓN DEL FORMULARIO ---
-    val isFormValid = nombre.isNotBlank() && direccion.isNotBlank()
+    // El formulario es válido si el nombre no está vacío. La ubicación siempre tendrá un valor,
+    // ya sea la original de la 'zona' o una nueva seleccionada.
+    val isFormValid = nombre.isNotBlank()
 
     // --- 3. CONSTRUCCIÓN DEL DIÁLOGO ---
     Dialog(onDismissRequest = onDismissRequest) {
@@ -62,7 +73,32 @@ fun EditarZonaFrecuenteDialog(
                     }
                 }
 
-                // --- Campos de texto (pre-rellenados) ---
+                // --- Selector de Ubicación ---
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(100.dp)
+                        .border(
+                            width = 1.dp,
+                            color = MaterialTheme.colorScheme.outline,
+                            shape = RoundedCornerShape(8.dp)
+                        )
+                        .clickable { onSeleccionarUbicacionClick() },
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                        // El texto muestra la nueva ubicación si se ha seleccionado una,
+                        // o la dirección original de la zona si no.
+                        val texto = when {
+                            ubicacionSeleccionada != null -> "Nueva ubicación:\n$ubicacionSeleccionada"
+                            else -> "Ubicación actual:\n${zona.direccionZona ?: "No especificada"}"
+                        }
+                        Text(text = texto, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                    }
+                }
+
+                // --- Campos de texto adicionales ---
                 OutlinedTextField(
                     value = nombre,
                     onValueChange = { nombre = it },
@@ -71,17 +107,9 @@ fun EditarZonaFrecuenteDialog(
                     singleLine = true
                 )
                 OutlinedTextField(
-                    value = direccion,
-                    onValueChange = { direccion = it },
-                    label = { Text("Dirección *") },
-                    modifier = Modifier.fillMaxWidth(),
-                    singleLine = true
-                )
-                OutlinedTextField(
                     value = nota,
                     onValueChange = { nota = it },
                     label = { Text("Nota (opcional)") },
-                    placeholder = { Text("Ej: Visitamos los martes, portón azul...") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -95,11 +123,13 @@ fun EditarZonaFrecuenteDialog(
                     }
                     Button(
                         onClick = {
-                            // Usamos .copy() para crear un nuevo objeto ZonaFrecuente
-                            // con los datos actualizados, manteniendo el id y coordenadas originales.
+                            // Si se seleccionó una nueva ubicación, se usan sus datos.
+                            // Si no, se mantienen los datos de la zona original.
                             val zonaActualizada = zona.copy(
                                 nombreZona = nombre.trim(),
-                                direccionZona = direccion.trim(),
+                                direccionZona = ubicacionSeleccionada?.direccion?.trim() ?: zona.direccionZona,
+                                latitud = ubicacionSeleccionada?.latitud ?: zona.latitud,
+                                longitud = ubicacionSeleccionada?.longitud ?: zona.longitud,
                                 notaZona = nota.trim().takeIf { it.isNotEmpty() }
                             )
                             onGuardarCambios(zonaActualizada)

@@ -16,6 +16,7 @@ import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -24,7 +25,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
 import com.example.movilsecure_v.model.entities.UbicacionResult
 import com.example.movilsecure_v.model.database.AppDatabase
-import com.example.movilsecure_v.model.entities.ZonaFrecuente // NUEVO: Importar ZonaFrecuente
+import com.example.movilsecure_v.model.entities.ZonaFrecuente
 import com.example.movilsecure_v.model.repository.ZonaFrecuenteRepository
 import com.example.movilsecure_v.view.components.zonasfrecuentes.CrearZonaFrecuenteDialog
 import com.example.movilsecure_v.view.components.zonasfrecuentes.EditarZonaFrecuenteDialog
@@ -35,7 +36,6 @@ import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModelFactory
 
 @Composable
 fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostController) {
-    // --- 1. CONFIGURACIÓN DEL VIEWMODEL ---
     val context = LocalContext.current
     val factory = ZonaFrecuenteViewModelFactory(
         ZonaFrecuenteRepository(
@@ -44,28 +44,34 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostC
     )
     val viewModel: ZonaFrecuenteViewModel = viewModel(factory = factory)
 
-    // --- 2. OBSERVACIÓN DEL ESTADO ---
     val zonas by viewModel.todasLasZonas.collectAsState()
 
-    // --- 3. ESTADO PARA CONTROLAR LA VISIBILIDAD DE LOS DIÁLOGOS ---
-    var showAddDialog by remember { mutableStateOf(false) }
+    // --- ESTADO QUE DEBE SOBREVIVIR A LA NAVEGACIÓN ---
+    var showAddDialog by rememberSaveable { mutableStateOf(false) }
+    var showEditDialog by rememberSaveable { mutableStateOf(false) }
+    var modoEdicion by rememberSaveable { mutableStateOf(false) }
+    var zonaAEditarId by rememberSaveable { mutableStateOf<String?>(null) }
+
+    // --- ESTADO TEMPORAL ---
     var ubicacionRecibida by remember { mutableStateOf<UbicacionResult?>(null) }
 
     val navBackStackEntry = navController.currentBackStackEntry
     val savedStateHandle = navBackStackEntry?.savedStateHandle
 
-    // NUEVO: Estados para controlar el diálogo de edición
-    var showEditDialog by remember { mutableStateOf(false) }
-    var zonaAEditar by remember { mutableStateOf<ZonaFrecuente?>(null) }
-
+    // Efecto para manejar el resultado de la pantalla de selección de ubicación
     LaunchedEffect(savedStateHandle) {
         savedStateHandle?.get<UbicacionResult>("ubicacion_seleccionada")?.let { resultado ->
             ubicacionRecibida = resultado
-            showAddDialog = true
+            if (modoEdicion) {
+                showEditDialog = true // Reabrir el diálogo de edición si estábamos en ese modo
+            } else {
+                showAddDialog = true
+            }
             savedStateHandle.remove<UbicacionResult>("ubicacion_seleccionada")
         }
     }
 
+    // Diálogo para AÑADIR
     if (showAddDialog) {
         CrearZonaFrecuenteDialog(
             ubicacionInicial = ubicacionRecibida,
@@ -86,22 +92,50 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostC
         )
     }
 
-    // --- 4. DISEÑO DE LA PANTALLA ---
+    // Buscamos la zona a editar usando el ID guardado
+    val zonaAEditar = zonaAEditarId?.let { id -> zonas.find { it.id == id } }
+
+    // Diálogo para EDITAR
+    if (showEditDialog && zonaAEditar != null) {
+        EditarZonaFrecuenteDialog(
+            zona = zonaAEditar,
+            ubicacionInicial = ubicacionRecibida,
+            onDismissRequest = {
+                showEditDialog = false
+                zonaAEditarId = null
+                ubicacionRecibida = null
+            },
+            onSeleccionarUbicacionClick = {
+                showEditDialog = false // Cerramos el diálogo antes de navegar
+                navController.navigate("seleccionarUbicacion")
+            },
+            onGuardarCambios = { zonaActualizada ->
+                viewModel.actualizarZona(zonaActualizada)
+                showEditDialog = false
+                zonaAEditarId = null
+                ubicacionRecibida = null
+                Toast.makeText(context, "${zonaActualizada.nombreZona} se ha actualizado correctamente", Toast.LENGTH_SHORT).show()
+            }
+        )
+    }
+
+    // --- UI de la pantalla principal ---
     Column(
         modifier = modifier
             .fillMaxSize()
             .padding(horizontal = 16.dp, vertical = 12.dp)
     ) {
-        // Componente de Cabecera
         ZonasHeaderCard(
             onAddZoneClick = {
+                modoEdicion = false
+                zonaAEditarId = null
+                ubicacionRecibida = null
                 showAddDialog = true
             }
         )
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        // Lista de Zonas Frecuentes
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
             verticalArrangement = Arrangement.spacedBy(12.dp),
@@ -116,10 +150,10 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostC
                     onVerRuta = {
                         Toast.makeText(context, "Viendo ruta para ${it.nombreZona}", Toast.LENGTH_SHORT).show()
                     },
-                    // NUEVO: Lógica para el botón de modificar
                     onModificar = { zonaSeleccionada ->
-                        // Guardamos la zona que se va a editar y mostramos el diálogo
-                        zonaAEditar = zonaSeleccionada
+                        modoEdicion = true
+                        zonaAEditarId = zonaSeleccionada.id
+                        ubicacionRecibida = null
                         showEditDialog = true
                     },
                     onEliminar = {
@@ -129,46 +163,5 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostC
                 )
             }
         }
-    }
-
-    // --- 5. LÓGICA PARA MOSTRAR LOS DIÁLOGOS ---
-
-    // Diálogo para AÑADIR una nueva zona
-    if (showAddDialog) {
-        CrearZonaFrecuenteDialog(
-            ubicacionInicial = ubicacionRecibida,
-            onDismissRequest = {
-                showAddDialog = false
-                ubicacionRecibida = null },
-            onSeleccionarUbicacionClick = {
-                showAddDialog = false
-                navController.navigate("seleccionarUbicacion")
-            },
-            onGuardarZona = { nombre, direccion, lat, lon, nota ->
-                viewModel.agregarZona(nombre, direccion, lat, lon, nota)
-                showAddDialog = false
-                ubicacionRecibida = null
-                Toast.makeText(context, "$nombre se ha guardado exitosamente", Toast.LENGTH_SHORT).show()
-            },
-        )
-    }
-
-    // NUEVO: Diálogo para EDITAR una zona existente
-    // Se mostrará solo si showEditDialog es true y tenemos una zona seleccionada
-    if (showEditDialog && zonaAEditar != null) {
-        EditarZonaFrecuenteDialog(
-            zona = zonaAEditar!!, // Pasamos la zona a editar al diálogo (el '!!' es seguro aquí por el 'if')
-            onDismissRequest = {
-                showEditDialog = false
-                zonaAEditar = null // Limpiamos la zona seleccionada al cerrar el diálogo
-            },
-            onGuardarCambios = { zonaActualizada ->
-                // Pasamos la zona con los datos modificados al ViewModel
-                viewModel.actualizarZona(zonaActualizada)
-                showEditDialog = false
-                zonaAEditar = null // Limpiamos la zona seleccionada al guardar
-                Toast.makeText(context, "${zonaActualizada.nombreZona} se ha actualizado correctamente", Toast.LENGTH_SHORT).show()
-            }
-        )
     }
 }

@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 private val types = listOf(
     "all" to "Todos",
     "hospital" to "Hospitales",
-    "clinic" to "Clínicas",
+    "doctor" to "Clínicas",
     "pharmacy" to "Farmacias"
 )
 

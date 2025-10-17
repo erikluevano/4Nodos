@@ -22,4 +22,12 @@ interface PlacesApiService {
         @Query("key") apiKey: String,
         @Query("fields") fields: String = "place_id,name,vicinity,formatted_address,geometry,opening_hours,rating"
     ): PlaceDetailsResponse
+
+    @GET("maps/api/place/nearbysearch/json")
+    suspend fun nearbySearch(
+        @Query("location") location: String,
+        @Query("radius") radius: Int,
+        @Query("type") type: String,
+        @Query("key") apiKey: String
+    ): PlacesResponse
 }

@@ -12,19 +12,14 @@ import kotlinx.coroutines.awaitAll
 import kotlinx.coroutines.launch
 
 class MapViewModel : ViewModel() {
-    // ... (los estados no cambian)
     val places = mutableStateOf<List<PlaceDetails>>(emptyList())
     val selectedPlaceForRoute = mutableStateOf<PlaceDetails?>(null)
     val selectedCardPlace = mutableStateOf<PlaceDetails?>(null)
 
-    // --- FUNCIÓN MODIFICADA PARA LA BARRA DE BÚSQUEDA ---
     fun textSearchPlaces(apiKey: String, query: String, location: LatLng, radius: Int) {
         viewModelScope.launch {
             try {
-                // 1. Limpiamos la lista anterior para mostrar que algo está cargando
                 places.value = emptyList()
-
-                // 2. Hacemos la búsqueda por texto inicial para obtener la lista de lugares
                 val locationStr = "${location.latitude},${location.longitude}"
                 val searchResponse = PlacesClient.service.textSearch(
                     query = query,
@@ -32,32 +27,53 @@ class MapViewModel : ViewModel() {
                     radius = radius,
                     apiKey = apiKey
                 )
+                if (searchResponse.results.isEmpty()) return@launch
 
-                if (searchResponse.results.isEmpty()) {
-                    return@launch // No hay nada que hacer si no hay resultados
-                }
-
-                // 3. Para cada resultado, lanzamos una llamada de "details" en paralelo
-                val detailedPlaces = searchResponse.results.map { placeResult ->
-                    // Usamos 'async' para que cada llamada a la API se ejecute concurrentemente
+                val detailedPlaces = searchResponse.results.map {
                     async {
                         try {
-                            val detailsResponse = PlacesClient.service.getPlaceDetails(
-                                placeId = placeResult.place_id,
-                                apiKey = apiKey
-                            )
-                            // Usamos la función de conversión que ya teníamos para los detalles
+                            val detailsResponse = PlacesClient.service.getPlaceDetails(it.place_id, apiKey)
                             detailsResponse.result.toPlaceDetails()
                         } catch (e: Exception) {
                             e.printStackTrace()
-                            null // Si una llamada individual falla, devolvemos null
+                            null
                         }
                     }
-                }.awaitAll() // Esperamos a que TODAS las llamadas de 'details' terminen
-
-                // 4. Filtramos los resultados que pudieron fallar (nulos) y actualizamos la UI
+                }.awaitAll()
                 places.value = detailedPlaces.filterNotNull()
+            } catch (e: Exception) {
+                e.printStackTrace()
+                places.value = emptyList()
+            }
+        }
+    }
 
+    // NUEVA FUNCIÓN PARA BÚSQUEDA POR TIPO (NEARBY SEARCH)
+    fun nearbySearchPlaces(apiKey: String, type: String, location: LatLng, radius: Int) {
+        viewModelScope.launch {
+            try {
+                places.value = emptyList()
+                val locationStr = "${location.latitude},${location.longitude}"
+                val searchResponse = PlacesClient.service.nearbySearch(
+                    type = type,
+                    location = locationStr,
+                    radius = radius,
+                    apiKey = apiKey
+                )
+                if (searchResponse.results.isEmpty()) return@launch
+
+                val detailedPlaces = searchResponse.results.map {
+                    async {
+                        try {
+                            val detailsResponse = PlacesClient.service.getPlaceDetails(it.place_id, apiKey)
+                            detailsResponse.result.toPlaceDetails()
+                        } catch (e: Exception) {
+                            e.printStackTrace()
+                            null
+                        }
+                    }
+                }.awaitAll()
+                places.value = detailedPlaces.filterNotNull()
             } catch (e: Exception) {
                 e.printStackTrace()
                 places.value = emptyList()
@@ -69,11 +85,7 @@ class MapViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 places.value = emptyList()
-
-                val response = PlacesClient.service.getPlaceDetails(
-                    placeId = placeId,
-                    apiKey = apiKey
-                )
+                val response = PlacesClient.service.getPlaceDetails(placeId, apiKey)
                 selectedCardPlace.value = response.result.toPlaceDetails()
             } catch (e: Exception) {
                 e.printStackTrace()
@@ -82,7 +94,6 @@ class MapViewModel : ViewModel() {
         }
     }
 
-    // --- Funciones de utilidad ---
     fun selectPlaceForRoute(place: PlaceDetails) {
         selectedPlaceForRoute.value = place
     }
