@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.model.entities
+package com.example.movilsecure_v.modelo.entidades
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity

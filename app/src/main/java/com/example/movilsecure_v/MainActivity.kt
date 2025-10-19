@@ -15,17 +15,16 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.movilsecure_v.ui.theme.MovilSecure_VTheme
-import com.example.movilsecure_v.view.screens.MapaScreen
-import com.example.movilsecure_v.view.screens.SeleccionarUbicacionScreen
+import com.example.movilsecure_v.vista.ui.MapaScreen
+import com.example.movilsecure_v.vista.ui.SeleccionarUbicacionScreen
 //import com.example.movilsecure_v.view.screens.UbicacionResult
-import com.example.movilsecure_v.view.screens.ZonasFrecuentesScreen
+import com.example.movilsecure_v.vista.ui.ZonasFrecuentesScreen
 
 
 class MainActivity : ComponentActivity() {
@@ -42,7 +41,7 @@ class MainActivity : ComponentActivity() {
 
 @Composable
 fun MovilSecure_VApp() {
-    // CAMBIO 1: Crear el NavController, que será la fuente de verdad para la navegación
+
     val navController = rememberNavController()
     // Obtenemos la ruta actual para saber qué ítem de la barra de navegación resaltar
     val navBackStackEntry by navController.currentBackStackEntryAsState()
@@ -50,12 +49,12 @@ fun MovilSecure_VApp() {
 
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            // CAMBIO 2: El onClick ahora navega usando el navController
+
             AppDestinations.entries.forEach { destination ->
                 item(
                     icon = { Icon(destination.icon, contentDescription = destination.label) },
                     label = { Text(destination.label) },
-                    // CAMBIO 3: El ítem se selecciona si su ruta coincide con la ruta actual
+
                     selected = currentRoute == destination.route,
                     onClick = {
                         navController.navigate(destination.route) {
@@ -71,7 +70,7 @@ fun MovilSecure_VApp() {
             }
         }
     ) {
-        // CAMBIO 4: El 'when' se reemplaza por un NavHost que contiene todas las pantallas
+
         NavHost(
             navController = navController,
             startDestination = AppDestinations.HOME.route, // La ruta inicial

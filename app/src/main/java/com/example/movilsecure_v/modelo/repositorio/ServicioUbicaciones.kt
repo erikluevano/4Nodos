@@ -1,11 +1,11 @@
-package com.example.movilsecure_v.model.repository
+package com.example.movilsecure_v.modelo.repositorio
 
-import com.example.movilsecure_v.model.entities.PlaceDetailsResponse
-import com.example.movilsecure_v.model.entities.PlacesResponse
+import com.example.movilsecure_v.modelo.entidades.PlaceDetailsResponse
+import com.example.movilsecure_v.modelo.entidades.PlacesResponse
 import retrofit2.http.GET
 import retrofit2.http.Query
 
-interface PlacesApiService {
+interface ServicioUbicaciones {
 
     // Nueva búsqueda por texto para la SearchBar
     @GET("maps/api/place/textsearch/json")

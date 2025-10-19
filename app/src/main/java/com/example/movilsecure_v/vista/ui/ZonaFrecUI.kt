@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.screens
+package com.example.movilsecure_v.vista.ui
 
 import android.content.Intent
 import android.widget.Toast
@@ -13,13 +13,13 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavHostController
-import com.example.movilsecure_v.model.database.AppDatabase
-import com.example.movilsecure_v.model.entities.PlaceDetails
-import com.example.movilsecure_v.model.entities.UbicacionResult
-import com.example.movilsecure_v.model.entities.ZonaFrecuente
-import com.example.movilsecure_v.model.repository.ZonaFrecuenteRepository
-import com.example.movilsecure_v.view.components.map.RouteDialog
-import com.example.movilsecure_v.view.components.zonasfrecuentes.*
+import com.example.movilsecure_v.modelo.basedatos.AppDatabase
+import com.example.movilsecure_v.modelo.entidades.PlaceDetails
+import com.example.movilsecure_v.modelo.entidades.UbicacionResultado
+import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
+import com.example.movilsecure_v.modelo.repositorio.RepositorioZonas
+import com.example.movilsecure_v.vista.componentes.mapa.RouteDialog
+import com.example.movilsecure_v.vista.componentes.zonasfrecuentes.*
 import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModel
 import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModelFactory
 import com.google.android.gms.maps.model.LatLng
@@ -27,7 +27,7 @@ import com.google.android.gms.maps.model.LatLng
 @Composable
 fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostController) {
     val context = LocalContext.current
-    val factory = ZonaFrecuenteViewModelFactory(ZonaFrecuenteRepository(AppDatabase.getDatabase(context).zonaFrecuenteDao()))
+    val factory = ZonaFrecuenteViewModelFactory(RepositorioZonas(AppDatabase.getDatabase(context).zonaFrecuenteDao()))
     val viewModel: ZonaFrecuenteViewModel = viewModel(factory = factory)
 
     val zonas by viewModel.todasLasZonas.collectAsState()
@@ -36,17 +36,17 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostC
     var showEditDialog by rememberSaveable { mutableStateOf(false) }
     var modoEdicion by rememberSaveable { mutableStateOf(false) }
     var zonaAEditarId by rememberSaveable { mutableStateOf<String?>(null) }
-    var ubicacionRecibida by remember { mutableStateOf<UbicacionResult?>(null) }
+    var ubicacionRecibida by remember { mutableStateOf<UbicacionResultado?>(null) }
     var zonaParaRuta by remember { mutableStateOf<ZonaFrecuente?>(null) }
 
     val navBackStackEntry = navController.currentBackStackEntry
     val savedStateHandle = navBackStackEntry?.savedStateHandle
 
     LaunchedEffect(savedStateHandle) {
-        savedStateHandle?.get<UbicacionResult>("ubicacion_seleccionada")?.let {
+        savedStateHandle?.get<UbicacionResultado>("ubicacion_seleccionada")?.let {
             ubicacionRecibida = it
             if (modoEdicion) showEditDialog = true else showAddDialog = true
-            savedStateHandle.remove<UbicacionResult>("ubicacion_seleccionada")
+            savedStateHandle.remove<UbicacionResultado>("ubicacion_seleccionada")
         }
     }
 

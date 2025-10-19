@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.zonasfrecuentes
+package com.example.movilsecure_v.vista.componentes.zonasfrecuentes
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -54,19 +54,19 @@ fun ZonasHeaderCard(
                 )
                 Spacer(modifier = Modifier.weight(1f))
 
-                // CAMBIO: Botón más pequeño y con forma de píldora
+
                 Button(
                     onClick = onAddZoneClick,
-                    shape = RoundedCornerShape(50), // Bordes muy redondeados
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp) // Padding reducido
+                    shape = RoundedCornerShape(50),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp)
                 ) {
                     Row(verticalAlignment = Alignment.CenterVertically) {
                         Icon(
                             imageVector = Icons.Default.Add,
                             contentDescription = "Agregar",
-                            modifier = Modifier.size(18.dp) // Icono más pequeño
+                            modifier = Modifier.size(18.dp)
                         )
-                        Spacer(modifier = Modifier.width(4.dp)) // Espacio reducido
+                        Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Agregar zona",
                             // CAMBIO: Texto del botón más pequeño
@@ -78,7 +78,7 @@ fun ZonasHeaderCard(
             Spacer(modifier = Modifier.height(8.dp))
             Text(
                 text = "Gestiona tus ubicaciones frecuentes para acceso rápido y navegación sencilla.",
-                // CAMBIO: Se reduce el tamaño del texto de descripción
+
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant
             )

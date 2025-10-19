@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.screens
+package com.example.movilsecure_v.vista.ui
 
 import android.location.Geocoder
 import androidx.compose.foundation.layout.Box
@@ -7,7 +7,6 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -16,7 +15,7 @@ import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.*
 import kotlinx.coroutines.launch
 import java.util.*
-import com.example.movilsecure_v.model.entities.UbicacionResult
+import com.example.movilsecure_v.modelo.entidades.UbicacionResultado
 
 
 // Un data class simple para empaquetar el resultado
@@ -25,7 +24,7 @@ import com.example.movilsecure_v.model.entities.UbicacionResult
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeleccionarUbicacionScreen(
-    onUbicacionSeleccionada: (UbicacionResult) -> Unit,
+    onUbicacionSeleccionada: (UbicacionResultado) -> Unit,
     onCancelar: () -> Unit
 ) {
     val context = LocalContext.current
@@ -49,7 +48,6 @@ fun SeleccionarUbicacionScreen(
             coroutineScope.launch {
                 try {
                     val geocoder = Geocoder(context, Locale.getDefault())
-                    // La geocodificación puede ser lenta, por eso se hace en una corrutina
                     val addresses = geocoder.getFromLocation(latLng.latitude, latLng.longitude, 1)
                     direccionEncontrada = if (addresses?.isNotEmpty() == true) {
                         addresses[0].getAddressLine(0) // Obtiene la primera línea de la dirección
@@ -80,7 +78,7 @@ fun SeleccionarUbicacionScreen(
                     val direccion = direccionEncontrada
                     if (posicion != null && !direccion.isNullOrBlank() && direccion != "Dirección no encontrada") {
                         onUbicacionSeleccionada(
-                            UbicacionResult(
+                            UbicacionResultado(
                                 direccion = direccion,
                                 latitud = posicion.latitude,
                                 longitud = posicion.longitude

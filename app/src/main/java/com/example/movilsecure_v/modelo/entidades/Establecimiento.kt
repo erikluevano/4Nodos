@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.model.entities
+package com.example.movilsecure_v.modelo.entidades
 
 import com.google.android.gms.maps.model.LatLng
 import android.os.Parcelable
@@ -59,7 +59,7 @@ data class PlaceDetailsResult(
 )
 
 @Parcelize // Anotación importante
-data class UbicacionResult(
+data class UbicacionResultado(
     val direccion: String,
     val latitud: Double,
     val longitud: Double

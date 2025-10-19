@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.map
+package com.example.movilsecure_v.vista.componentes.mapa
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -12,8 +12,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.movilsecure_v.model.entities.PlaceDetails
-// NUEVAS IMPORTACIONES PARA EL MAPA
+import com.example.movilsecure_v.modelo.entidades.PlaceDetails
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.maps.android.compose.GoogleMap
 import com.google.maps.android.compose.Marker

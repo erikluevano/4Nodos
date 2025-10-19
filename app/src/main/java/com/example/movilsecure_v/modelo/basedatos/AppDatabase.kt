@@ -1,11 +1,11 @@
-package com.example.movilsecure_v.model.database
+package com.example.movilsecure_v.modelo.basedatos
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import com.example.movilsecure_v.model.entities.ZonaFrecuente
-import com.example.movilsecure_v.model.repository.ZonaFrecuenteDao
+import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
+import com.example.movilsecure_v.modelo.repositorio.ZonaFrecuenteDao
 
 @Database(entities = [ZonaFrecuente::class], version = 1, exportSchema = false)
 abstract class AppDatabase : RoomDatabase() {

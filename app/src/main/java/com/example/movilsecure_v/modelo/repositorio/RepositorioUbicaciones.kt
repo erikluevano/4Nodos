@@ -1,11 +1,11 @@
-package com.example.movilsecure_v.model.repository
+package com.example.movilsecure_v.modelo.repositorio
 
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import retrofit2.Retrofit
 import retrofit2.converter.moshi.MoshiConverterFactory
 
-object PlacesClient {
+object RepositorioUbicaciones {
     private const val BASE_URL = "https://maps.googleapis.com/"
 
     private val moshi = Moshi.Builder()
@@ -17,5 +17,5 @@ object PlacesClient {
         .addConverterFactory(MoshiConverterFactory.create(moshi))
         .build()
 
-    val service: PlacesApiService = retrofit.create(PlacesApiService::class.java)
+    val service: ServicioUbicaciones = retrofit.create(ServicioUbicaciones::class.java)
 }

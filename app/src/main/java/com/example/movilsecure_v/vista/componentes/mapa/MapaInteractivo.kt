@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.map
+package com.example.movilsecure_v.vista.componentes.mapa
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -7,10 +7,11 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.example.movilsecure_v.model.entities.PlaceDetails
+import com.example.movilsecure_v.modelo.entidades.PlaceDetails
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.MapUiSettings
 import com.google.maps.android.compose.Marker
 import com.google.maps.android.compose.MarkerState
 import com.google.maps.android.compose.rememberCameraPositionState
@@ -36,12 +37,12 @@ fun InteractiveMap(
                 .fillMaxWidth()
                 .height(250.dp),
             cameraPositionState = cameraPositionState,
+            uiSettings = MapUiSettings(mapToolbarEnabled = false),
             onPOIClick = { poi ->
                 onPOIClick(poi.placeId)
             }
         ) {
-            // --- NUEVA LÓGICA ---
-            // Iteramos sobre la lista de lugares y creamos un marcador para cada uno
+
             places.forEach { place ->
                 Marker(
                     state = MarkerState(position = place.location),

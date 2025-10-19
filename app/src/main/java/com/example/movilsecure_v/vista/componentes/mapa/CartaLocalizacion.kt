@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.map
+package com.example.movilsecure_v.vista.componentes.mapa
 
 import android.content.Intent
 import android.widget.Toast
@@ -12,7 +12,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
-import com.example.movilsecure_v.model.entities.PlaceDetails
+import com.example.movilsecure_v.modelo.entidades.PlaceDetails
 import androidx.compose.ui.platform.LocalContext
 import androidx.core.net.toUri
 

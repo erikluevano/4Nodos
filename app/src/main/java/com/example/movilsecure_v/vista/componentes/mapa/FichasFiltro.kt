@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.map
+package com.example.movilsecure_v.vista.componentes.mapa
 
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow

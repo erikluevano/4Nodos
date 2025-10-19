@@ -3,9 +3,9 @@ package com.example.movilsecure_v.viewmodel
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.movilsecure_v.model.entities.PlaceDetails
-import com.example.movilsecure_v.model.entities.PlaceDetailsResult
-import com.example.movilsecure_v.model.repository.PlacesClient
+import com.example.movilsecure_v.modelo.entidades.PlaceDetails
+import com.example.movilsecure_v.modelo.entidades.PlaceDetailsResult
+import com.example.movilsecure_v.modelo.repositorio.RepositorioUbicaciones
 import com.google.android.gms.maps.model.LatLng
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -21,7 +21,7 @@ class MapViewModel : ViewModel() {
             try {
                 places.value = emptyList()
                 val locationStr = "${location.latitude},${location.longitude}"
-                val searchResponse = PlacesClient.service.textSearch(
+                val searchResponse = RepositorioUbicaciones.service.textSearch(
                     query = query,
                     location = locationStr,
                     radius = radius,
@@ -32,7 +32,7 @@ class MapViewModel : ViewModel() {
                 val detailedPlaces = searchResponse.results.map {
                     async {
                         try {
-                            val detailsResponse = PlacesClient.service.getPlaceDetails(it.place_id, apiKey)
+                            val detailsResponse = RepositorioUbicaciones.service.getPlaceDetails(it.place_id, apiKey)
                             detailsResponse.result.toPlaceDetails()
                         } catch (e: Exception) {
                             e.printStackTrace()
@@ -53,7 +53,7 @@ class MapViewModel : ViewModel() {
             try {
                 places.value = emptyList()
                 val locationStr = "${location.latitude},${location.longitude}"
-                val searchResponse = PlacesClient.service.nearbySearch(
+                val searchResponse = RepositorioUbicaciones.service.nearbySearch(
                     type = type,
                     location = locationStr,
                     radius = radius,
@@ -64,7 +64,7 @@ class MapViewModel : ViewModel() {
                 val detailedPlaces = searchResponse.results.map {
                     async {
                         try {
-                            val detailsResponse = PlacesClient.service.getPlaceDetails(it.place_id, apiKey)
+                            val detailsResponse = RepositorioUbicaciones.service.getPlaceDetails(it.place_id, apiKey)
                             detailsResponse.result.toPlaceDetails()
                         } catch (e: Exception) {
                             e.printStackTrace()
@@ -84,7 +84,7 @@ class MapViewModel : ViewModel() {
         viewModelScope.launch {
             try {
                 places.value = emptyList()
-                val response = PlacesClient.service.getPlaceDetails(placeId, apiKey)
+                val response = RepositorioUbicaciones.service.getPlaceDetails(placeId, apiKey)
                 selectedCardPlace.value = response.result.toPlaceDetails()
             } catch (e: Exception) {
                 e.printStackTrace()

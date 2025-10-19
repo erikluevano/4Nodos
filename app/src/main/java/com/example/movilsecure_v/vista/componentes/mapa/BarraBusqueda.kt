@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.map
+package com.example.movilsecure_v.vista.componentes.mapa
 
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardActions
@@ -32,12 +32,12 @@ fun SearchBar(
                 )
             }
         },
-        singleLine = true, // Evita el salto de línea
+        singleLine = true,
         keyboardOptions = KeyboardOptions(
-            imeAction = ImeAction.Search // Muestra un botón de "Buscar" en el teclado
+            imeAction = ImeAction.Search
         ),
         keyboardActions = KeyboardActions(
-            onSearch = { onSearch() } // Llama a onSearch cuando se presiona el botón del teclado
+            onSearch = { onSearch() }
         )
     )
 }

@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.zonasfrecuentes
+package com.example.movilsecure_v.vista.componentes.zonasfrecuentes
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -29,7 +29,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.example.movilsecure_v.model.entities.ZonaFrecuente
+import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
 
 
 @Composable
@@ -86,7 +86,7 @@ fun ZonaFrecuenteCard(
                 )
             }
 
-            // Nota (si existe) (sin cambios)
+
             if (!zona.notaZona.isNullOrBlank()) {
                 Surface(
                     modifier = Modifier.fillMaxWidth(),
@@ -103,10 +103,9 @@ fun ZonaFrecuenteCard(
                 }
             }
 
-            // --- SECCIÓN DE BOTONES MODIFICADA ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceAround, // SpaceAround da un poco más de aire en los bordes
+                horizontalArrangement = Arrangement.SpaceAround,
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 // Definimos un padding más compacto para los botones
@@ -114,7 +113,7 @@ fun ZonaFrecuenteCard(
 
                 OutlinedButton(
                     onClick = { onVerRuta(zona) },
-                    contentPadding = buttonPadding // <-- CAMBIO: Aplicamos el padding compacto
+                    contentPadding = buttonPadding
                 ) {
                     Icon(Icons.Default.Route, contentDescription = "Ver Ruta", modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
@@ -122,7 +121,7 @@ fun ZonaFrecuenteCard(
                 }
                 OutlinedButton(
                     onClick = { onModificar(zona) },
-                    contentPadding = buttonPadding // <-- CAMBIO: Aplicamos el padding compacto
+                    contentPadding = buttonPadding
                 ) {
                     Icon(Icons.Default.Edit, contentDescription = "Modificar", modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
@@ -130,7 +129,7 @@ fun ZonaFrecuenteCard(
                 }
                 OutlinedButton(
                     onClick = { onEliminar(zona) },
-                    contentPadding = buttonPadding // <-- CAMBIO: Aplicamos el padding compacto
+                    contentPadding = buttonPadding
                 ) {
                     Icon(Icons.Default.Delete, contentDescription = "Eliminar", modifier = Modifier.size(ButtonDefaults.IconSize))
                     Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))

@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.model.repository
+package com.example.movilsecure_v.modelo.repositorio
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -6,7 +6,7 @@ import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
 import androidx.room.Update
-import com.example.movilsecure_v.model.entities.ZonaFrecuente
+import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
 import kotlinx.coroutines.flow.Flow
 
 @Dao

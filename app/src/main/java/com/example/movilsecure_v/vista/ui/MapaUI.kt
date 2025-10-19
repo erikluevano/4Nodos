@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.screens
+package com.example.movilsecure_v.vista.ui
 
 import android.content.Intent
 import androidx.compose.foundation.layout.*
@@ -13,7 +13,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.movilsecure_v.BuildConfig
-import com.example.movilsecure_v.view.components.map.*
+import com.example.movilsecure_v.vista.componentes.mapa.*
 import com.example.movilsecure_v.viewmodel.MapViewModel
 import com.google.android.gms.maps.model.LatLng
 

@@ -1,12 +1,12 @@
-// Archivo: viewmodel/ZonaFrecuenteViewModel.kt
+// Archivo: viewmodel/ZonaFrecuenteVM.kt
 
 package com.example.movilsecure_v.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
-import com.example.movilsecure_v.model.entities.ZonaFrecuente
-import com.example.movilsecure_v.model.repository.ZonaFrecuenteRepository
+import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
+import com.example.movilsecure_v.modelo.repositorio.RepositorioZonas
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.stateIn
@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
  *
  * @param repository El repositorio que provee acceso a los datos de las zonas.
  */
-class ZonaFrecuenteViewModel(private val repository: ZonaFrecuenteRepository) : ViewModel() {
+class ZonaFrecuenteViewModel(private val repository: RepositorioZonas) : ViewModel() {
 
     // --- ESTADO OBSERVABLE PARA LA UI ---
 
@@ -76,7 +76,7 @@ class ZonaFrecuenteViewModel(private val repository: ZonaFrecuenteRepository) : 
  * Factory para crear una instancia de ZonaFrecuenteViewModel con sus dependencias (el repositorio).
  * Esto es necesario porque el ViewModel tiene un constructor que no está vacío.
  */
-class ZonaFrecuenteViewModelFactory(private val repository: ZonaFrecuenteRepository) : ViewModelProvider.Factory {
+class ZonaFrecuenteViewModelFactory(private val repository: RepositorioZonas) : ViewModelProvider.Factory {
     override fun <T : ViewModel> create(modelClass: Class<T>): T {
         if (modelClass.isAssignableFrom(ZonaFrecuenteViewModel::class.java)) {
             @Suppress("UNCHECKED_CAST")

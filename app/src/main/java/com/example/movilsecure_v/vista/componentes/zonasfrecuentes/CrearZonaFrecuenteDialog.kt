@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.view.components.zonasfrecuentes
+package com.example.movilsecure_v.vista.componentes.zonasfrecuentes
 
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -13,9 +13,14 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
-import com.example.movilsecure_v.model.entities.UbicacionResult
+import com.example.movilsecure_v.modelo.entidades.UbicacionResultado
+import com.google.android.gms.maps.CameraUpdateFactory
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.*
 
 private enum class AddMethod { MAP, TEXT }
 
@@ -28,7 +33,7 @@ private enum class AddMethod { MAP, TEXT }
  */
 @Composable
 fun CrearZonaFrecuenteDialog(
-    ubicacionInicial: UbicacionResult? = null,
+    ubicacionInicial: UbicacionResultado? = null,
     onDismissRequest: () -> Unit,
     onGuardarZona: (nombre: String, direccion: String, lat: Double, lon: Double, nota: String?) -> Unit,
     onSeleccionarUbicacionClick: () -> Unit
@@ -39,16 +44,10 @@ fun CrearZonaFrecuenteDialog(
     var direccion by remember { mutableStateOf("") }
     var addMethod by remember { mutableStateOf(AddMethod.MAP) }
 
-    // Simula una ubicación seleccionada del mapa. En una implementación real,
-    // esto se actualizaría al volver de la pantalla del mapa con un resultado.
-    //var ubicacionSeleccionada by remember { mutableStateOf<String?>(null) }
     var ubicacionSeleccionada by remember(ubicacionInicial) {
         mutableStateOf(ubicacionInicial)
     }
     // --- 2. VALIDACIÓN DEL FORMULARIO ---
-    //val isFormValid = nombre.isNotBlank() &&
-      //      ( (addMethod == AddMethod.TEXT && direccion.isNotBlank()) ||
-        //            (addMethod == AddMethod.MAP && ubicacionSeleccionada != null) )
     val isFormValid = nombre.isNotBlank() && ubicacionSeleccionada != null
 
     // --- 3. CONSTRUCCIÓN DEL DIÁLOGO ---
@@ -80,31 +79,54 @@ fun CrearZonaFrecuenteDialog(
                 // --- Input de Ubicación (Condicional) ---
                 when(addMethod) {
                     AddMethod.MAP -> {
-                        // Placeholder para seleccionar en mapa
+                        // --- CAMBIO: Se reemplaza el contenido del Box ---
                         Box(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .height(100.dp)
+                                .height(150.dp) // Aumentamos la altura para el mapa
                                 .border(
                                     width = 1.dp,
                                     color = MaterialTheme.colorScheme.outline,
                                     shape = RoundedCornerShape(8.dp)
                                 )
-                                .clickable {
-                                    onSeleccionarUbicacionClick()
-                                    // TODO: Navegar a la pantalla del mapa para seleccionar una ubicación.
-                                    // Por ahora, simulamos una selección para la prueba.
-                                    //ubicacionSeleccionada = "Av. Siempre Viva 742"
-                                },
+                                .clip(RoundedCornerShape(8.dp)) // Para que el mapa tenga bordes redondeados
+                                .clickable { onSeleccionarUbicacionClick() },
                             contentAlignment = Alignment.Center
                         ) {
-                            Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                                Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
-                                val texto = when {
-                                    ubicacionSeleccionada != null -> "Ubicación seleccionada:\n$ubicacionSeleccionada"
-                                    else -> "Toca para seleccionar ubicación"
+                            if (ubicacionSeleccionada == null) {
+                                // Muestra el placeholder si no hay ubicación
+                                Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Icon(Icons.Default.LocationOn, contentDescription = null, tint = MaterialTheme.colorScheme.onSurfaceVariant)
+                                    Text(text = "Toca para seleccionar ubicación", color = MaterialTheme.colorScheme.onSurfaceVariant)
                                 }
-                                Text(text = texto, color = MaterialTheme.colorScheme.onSurfaceVariant)
+                            } else {
+                                // Muestra el mapa si hay una ubicación seleccionada
+                                val posicion = LatLng(ubicacionSeleccionada!!.latitud, ubicacionSeleccionada!!.longitud)
+                                val cameraPositionState = rememberCameraPositionState {
+                                    position = CameraPosition.fromLatLngZoom(posicion, 15f)
+                                }
+                                // Efecto para que la cámara se actualice si la ubicación cambia
+                                LaunchedEffect(posicion) {
+                                    cameraPositionState.animate(CameraUpdateFactory.newLatLngZoom(posicion, 15f))
+                                }
+
+                                GoogleMap(
+                                    modifier = Modifier.fillMaxSize(),
+                                    cameraPositionState = cameraPositionState,
+                                    uiSettings = MapUiSettings( // Desactivamos la interacción con el mini-mapa
+                                        zoomControlsEnabled = false,
+                                        scrollGesturesEnabled = false,
+                                        zoomGesturesEnabled = false,
+                                        tiltGesturesEnabled = false,
+                                        rotationGesturesEnabled = false,
+                                        mapToolbarEnabled = false
+                                    )
+                                ) {
+                                    Marker(
+                                        state = MarkerState(position = posicion),
+                                        title = "Ubicación seleccionada"
+                                    )
+                                }
                             }
                         }
                     }
@@ -146,14 +168,12 @@ fun CrearZonaFrecuenteDialog(
                     }
                     Button(
                         onClick = {
-                            val finalDireccion = if (addMethod == AddMethod.MAP) ubicacionSeleccionada!! else direccion
                             val ubicacion = ubicacionSeleccionada!!
                             onGuardarZona(
                                 nombre.trim(),
                                 ubicacion.direccion.trim(),
                                 ubicacion.latitud,
                                 ubicacion.longitud,
-                                //finalDireccion.trim(),
                                 nota.trim().takeIf { it.isNotEmpty() }
                             )
                         },
