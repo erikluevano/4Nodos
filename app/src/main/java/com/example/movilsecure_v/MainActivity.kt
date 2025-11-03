@@ -1,3 +1,4 @@
+
 package com.example.movilsecure_v
 
 import android.os.Bundle
@@ -22,6 +23,7 @@ import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
 import com.example.movilsecure_v.ui.theme.MovilSecure_VTheme
 import com.example.movilsecure_v.vista.ui.MapaScreen
+import com.example.movilsecure_v.vista.ui.PerfilScreen
 import com.example.movilsecure_v.vista.ui.SeleccionarUbicacionScreen
 //import com.example.movilsecure_v.view.screens.UbicacionResult
 import com.example.movilsecure_v.vista.ui.ZonasFrecuentesScreen
@@ -85,7 +87,8 @@ fun MovilSecure_VApp() {
                 ZonasFrecuentesScreen(navController = navController, modifier = Modifier.fillMaxSize())
             }
             composable(route = AppDestinations.PROFILE.route) {
-                PlaceholderScreen("Perfil del Cuidador")
+                // ¡AQUÍ ESTÁ EL CAMBIO!
+                PerfilScreen(modifier = Modifier.fillMaxSize())
             }
 
             // --- Otros destinos (que no están en la barra de navegación) ---
