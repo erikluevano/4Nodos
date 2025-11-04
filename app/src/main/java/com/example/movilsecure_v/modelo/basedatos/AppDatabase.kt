@@ -1,20 +1,26 @@
-
 package com.example.movilsecure_v.modelo.basedatos
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
+import androidx.room.TypeConverters
+import com.example.movilsecure_v.modelo.Cita
 import com.example.movilsecure_v.modelo.PerfilAdultoMayor
 import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
+import com.example.movilsecure_v.modelo.repositorio.CitasDAO
 import com.example.movilsecure_v.modelo.repositorio.PerfilDao
 import com.example.movilsecure_v.modelo.repositorio.ZonaFrecuenteDao
 
-@Database(entities = [ZonaFrecuente::class, PerfilAdultoMayor::class], version = 2, exportSchema = false)
+// Se añade Cita a las entidades, se sube la versión y se registra el TypeConverter
+@Database(entities = [ZonaFrecuente::class, PerfilAdultoMayor::class, Cita::class], version = 3, exportSchema = false)
+@TypeConverters(Converters::class)
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun zonaFrecuenteDao(): ZonaFrecuenteDao
     abstract fun perfilDao(): PerfilDao
+    // Se añade el nuevo DAO
+    abstract fun citasDao(): CitasDAO
 
     companion object {
         @Volatile
@@ -27,8 +33,6 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "movilsecure_database"
                 )
-                // Para una app en producción, aquí se manejaría una migración custom.
-                // Para este caso, una migración destructiva es suficiente.
                 .fallbackToDestructiveMigration()
                 .build()
                 INSTANCE = instance
