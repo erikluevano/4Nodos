@@ -21,7 +21,7 @@ class FormPerfilUI(
 
     // El método que la UI llamará cuando el usuario presione "Guardar"
     fun validarYGuardar() {
-        viewModel.registrarPerfil()
+        viewModel.registrarOActualizarPerfil() // <-- CORREGIDO
     }
 
     fun cancelarRegistro() {
