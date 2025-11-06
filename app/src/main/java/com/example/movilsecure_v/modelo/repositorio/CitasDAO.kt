@@ -1,6 +1,7 @@
 package com.example.movilsecure_v.modelo.repositorio
 
 import androidx.room.Dao
+import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
@@ -21,4 +22,7 @@ interface CitasDAO {
      */
     @Query("SELECT * FROM Cita ORDER BY fecha ASC")
     suspend fun ConsultarCitasRegistradas(): List<Cita>
+
+    @Delete
+    suspend fun eliminarDatosCita(cita: Cita)
 }

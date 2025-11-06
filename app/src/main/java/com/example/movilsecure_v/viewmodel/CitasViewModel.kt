@@ -150,6 +150,13 @@ class CitasViewModel(application: Application) : AndroidViewModel(application) {
             }
         }
     }
+
+    fun eliminarCita(cita: Cita) {
+        viewModelScope.launch {
+            repositorio.guardarEliminacion(cita)
+            refrescarCitas()
+        }
+    }
 }
 
 sealed class UiState(val mensaje: String) {

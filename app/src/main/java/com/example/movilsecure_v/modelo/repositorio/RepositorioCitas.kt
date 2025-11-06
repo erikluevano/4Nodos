@@ -38,4 +38,8 @@ class RepositorioCitas(application: Application) {
     suspend fun ObtenerCitasAntiguas(): List<Cita> {
         return citasDao.ConsultarCitasRegistradas().sortedBy { it.fecha }
     }
+
+    suspend fun guardarEliminacion(cita: Cita) {
+        citasDao.eliminarDatosCita(cita)
+    }
 }

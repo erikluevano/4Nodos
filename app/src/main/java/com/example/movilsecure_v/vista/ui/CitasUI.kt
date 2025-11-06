@@ -1,5 +1,6 @@
 package com.example.movilsecure_v.vista.ui
 
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -41,6 +42,10 @@ fun CitasUI(modifier: Modifier = Modifier, viewModel: CitasViewModel = viewModel
     val scope = rememberCoroutineScope()
     val uiState by viewModel.uiState.collectAsState()
 
+    var citaSeleccionada by remember { mutableStateOf<Cita?>(null) }
+    var mostrandoDialogoDetalles by remember { mutableStateOf(false) }
+    var citaParaEliminar by remember { mutableStateOf<Cita?>(null) }
+
     fun SolicitarFormularioRegistro() {
         mostrandoFormulario = true
     }
@@ -60,6 +65,26 @@ fun CitasUI(modifier: Modifier = Modifier, viewModel: CitasViewModel = viewModel
 
     fun EnviarCriterioFiltro(criterio: FiltroCitas) {
         viewModel.cambiarFiltro(criterio)
+    }
+
+    fun AbrirDialogoDetalles(cita: Cita) {
+        citaSeleccionada = cita
+        mostrandoDialogoDetalles = true
+    }
+
+    fun cerrarDialogo() {
+        mostrandoDialogoDetalles = false
+        citaSeleccionada = null // Limpiar la selección
+    }
+
+    fun mostrarConfirmacion(cita: Cita) {
+        cerrarDialogo()
+        citaParaEliminar = cita
+    }
+
+    fun EliminarCita(cita: Cita) {
+        viewModel.eliminarCita(cita) // Llamada al método del ViewModel
+        citaParaEliminar = null // Limpiar la cita para eliminación
     }
 
     LaunchedEffect(uiState) {
@@ -95,7 +120,8 @@ fun CitasUI(modifier: Modifier = Modifier, viewModel: CitasViewModel = viewModel
                 onRegistrarClick = { 
                     SolicitarFormularioRegistro()
                 },
-                onFiltroCambiado = { nuevoFiltro -> EnviarCriterioFiltro(nuevoFiltro) }
+                onFiltroCambiado = { nuevoFiltro -> EnviarCriterioFiltro(nuevoFiltro) },
+                onCitaClick = { cita -> AbrirDialogoDetalles(cita) }
             )
         }
     }
@@ -105,6 +131,23 @@ fun CitasUI(modifier: Modifier = Modifier, viewModel: CitasViewModel = viewModel
             viewModel.consumirUiState()
             mostrandoFormulario = false
         }
+    }
+
+    if (mostrandoDialogoDetalles && citaSeleccionada != null) {
+        DialogoDetallesCita(
+            cita = citaSeleccionada!!,
+            onDismiss = { cerrarDialogo() },
+            onEliminar = { mostrarConfirmacion(citaSeleccionada!!) },
+            onPosponer = { /* Lógica de posponer (pendiente) */ }
+        )
+    }
+
+    if (citaParaEliminar != null) {
+        DialogoConfirmacionEliminar(
+            cita = citaParaEliminar!!,
+            onConfirmar = { EliminarCita(citaParaEliminar!!) },
+            onCancelar = { citaParaEliminar = null }
+        )
     }
 }
 
@@ -117,7 +160,8 @@ private fun MostrarOpcion_RegistroCita(
     citas: List<Cita>,
     filtroActivo: FiltroCitas,
     onRegistrarClick: () -> Unit,
-    onFiltroCambiado: (FiltroCitas) -> Unit
+    onFiltroCambiado: (FiltroCitas) -> Unit,
+    onCitaClick: (Cita) -> Unit
 ) {
     Column(
         modifier = modifier.fillMaxSize().padding(16.dp),
@@ -156,7 +200,7 @@ private fun MostrarOpcion_RegistroCita(
         Spacer(modifier = Modifier.height(24.dp))
 
         // 8. MostrarListaCitas(citas: List<Cita>)
-        MostrarListaCitas(citas = citas, filtroActivo = filtroActivo)
+        MostrarListaCitas(citas = citas, filtroActivo = filtroActivo, onCitaClick = onCitaClick)
     }
 }
 
@@ -202,7 +246,7 @@ private fun MostrarFormulario(
  *  Muestro visualmente la lista de citas en tarjetas.
  */
 @Composable
-private fun MostrarListaCitas(citas: List<Cita>, filtroActivo: FiltroCitas) {
+private fun MostrarListaCitas(citas: List<Cita>, filtroActivo: FiltroCitas, onCitaClick: (Cita) -> Unit) {
     if (citas.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             val texto = if(filtroActivo == FiltroCitas.PROXIMAS) "No tienes citas proximas" else "No tienes citas antiguas"
@@ -211,16 +255,18 @@ private fun MostrarListaCitas(citas: List<Cita>, filtroActivo: FiltroCitas) {
     } else {
         LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             items(citas) { cita ->
-                CitaCard(cita = cita)
+                CitaCard(cita = cita, onClick = { onCitaClick(cita) })
             }
         }
     }
 }
 
 @Composable
-private fun CitaCard(cita: Cita) {
+private fun CitaCard(cita: Cita, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable (onClick = onClick),
         elevation = CardDefaults.cardElevation(defaultElevation = 4.dp),
         shape = RoundedCornerShape(12.dp)
     ) {
@@ -279,4 +325,129 @@ private fun FiltroButton(text: String, isSelected: Boolean, onClick: () -> Unit)
     Button(onClick = onClick, colors = colors, shape = RoundedCornerShape(50)) {
         Text(text)
     }
+}
+
+@Composable
+private fun DialogoDetallesCita(
+    cita: Cita,
+    onDismiss: () -> Unit,
+    onEliminar: () -> Unit,
+    onPosponer: () -> Unit
+) {
+    val formatoFecha = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale.getDefault())
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Info, contentDescription = "Detalles", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Detalles de la Cita", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            }
+        },
+        text = {
+            Column {
+                InfoRow(icon = Icons.Default.CalendarToday, text = "Fecha: ${formatoFecha.format(cita.fecha)}")
+                Spacer(modifier = Modifier.height(8.dp))
+                InfoRow(icon = Icons.Default.AccessTime, text = "Hora: ${cita.hora}")
+                Spacer(modifier = Modifier.height(8.dp))
+                InfoRow(icon = Icons.Default.LocationOn, text = "Lugar: ${cita.lugar}")
+                if (cita.motivo.isNotBlank()) {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    InfoRow(icon = Icons.Default.Info, text = "Motivo: ${cita.motivo}")
+                }
+            }
+        },
+        confirmButton = {
+            // Botones de acción
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                // Botón "Eliminar" (Llama a la lógica de eliminación)
+                Button(
+                    onClick = onEliminar,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Eliminar")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                // Botón "Posponer" (Lógica pendiente)
+                Button(
+                    onClick = onPosponer,
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Posponer")
+                }
+            }
+        },
+        dismissButton = {
+            // Botón para cerrar el diálogo
+            TextButton(onClick = onDismiss) {
+                Text("Cerrar")
+            }
+        }
+    )
+}
+
+@Composable
+private fun DialogoConfirmacionEliminar(
+    cita: Cita,
+    onConfirmar: () -> Unit,
+    onCancelar: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onCancelar,
+        title = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
+                Icon(Icons.Default.Info, contentDescription = "Advertencia", tint = Color(0xFFF44336), modifier = Modifier.size(48.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                Text("Confirmar Eliminación", fontWeight = FontWeight.Bold, style = MaterialTheme.typography.titleLarge)
+            }
+        },
+        text = {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    "¿Estás seguro de que deseas eliminar la siguiente cita?",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodyMedium
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                // Mostrar un detalle de la cita a eliminar
+                val formatoFecha = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+                Text(
+                    "Motivo: ${cita.motivo.ifBlank { "Sin motivo" }}\nFecha: ${formatoFecha.format(cita.fecha)} a las ${cita.hora}",
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    "Esta acción no se puede deshacer.",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = Color.Red
+                )
+            }
+        },
+        confirmButton = {
+            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceEvenly) {
+                // Botón "Sí, Eliminar"
+                Button(
+                    onClick = onConfirmar,
+                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFF44336)),
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("Sí, Eliminar")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                // Botón "No, Cancelar"
+                OutlinedButton(
+                    onClick = onCancelar,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text("No, Cancelar")
+                }
+            }
+        }
+    )
 }
