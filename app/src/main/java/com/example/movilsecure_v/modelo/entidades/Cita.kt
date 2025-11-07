@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.modelo
+package com.example.movilsecure_v.modelo.entidades
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey

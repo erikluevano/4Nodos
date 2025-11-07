@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.modelo.repositorio
+package com.example.movilsecure_v.modelo.servicios
 
 import androidx.room.Dao
 import androidx.room.Delete

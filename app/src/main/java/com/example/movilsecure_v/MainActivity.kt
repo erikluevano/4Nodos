@@ -41,6 +41,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // Necesario para TopAppBar
 @Composable
 fun MovilSecure_VApp() {
 
@@ -48,9 +49,11 @@ fun MovilSecure_VApp() {
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentRoute = navBackStackEntry?.destination?.route
 
+    val currentDestination = AppDestinations.entries.find { it.route == currentRoute }
+    val currentTitle = currentDestination?.label?.replace("\n", " ")?.trim() ?: ""
+
     NavigationSuiteScaffold(
         navigationSuiteItems = {
-            // El .entries respeta el orden definido en el enum
             AppDestinations.entries.forEach { destination ->
                 item(
                     icon = { Icon(destination.icon, contentDescription = destination.label) },
@@ -67,49 +70,71 @@ fun MovilSecure_VApp() {
             }
         }
     ) {
-
-        NavHost(
-            navController = navController,
-            startDestination = AppDestinations.HOME.route,
-            modifier = Modifier.fillMaxSize()
-        ) {
-            composable(route = AppDestinations.HOME.route) {
-                MapaScreen(modifier = Modifier.fillMaxSize())
-            }
-            composable(route = AppDestinations.FAVORITES.route) {
-                ZonasFrecuentesScreen(navController = navController, modifier = Modifier.fillMaxSize())
-            }
-            // Ruta para la nueva pantalla de Citas
-            composable(route = AppDestinations.CITAS.route) {
-                CitasUI(modifier = Modifier.fillMaxSize())
-            }
-            composable(route = AppDestinations.PROFILE.route) {
-                PerfilScreen(modifier = Modifier.fillMaxSize())
-            }
-
-            composable(route = "seleccionarUbicacion") {
-                SeleccionarUbicacionScreen(
-                    onCancelar = { navController.popBackStack() },
-                    onUbicacionSeleccionada = { resultado ->
-                        navController.previousBackStackEntry
-                            ?.savedStateHandle
-                            ?.set("ubicacion_seleccionada", resultado)
-                        navController.popBackStack()
-                    }
+        Scaffold(
+            topBar = {
+                TopAppBar(
+                    title = {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Text(
+                                text = "MovilSecure",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface
+                    )
                 )
+            }
+        ) { innerPadding ->
+            NavHost(
+                navController = navController,
+                startDestination = AppDestinations.HOME.route,
+                modifier = Modifier
+                    .padding(innerPadding)
+                    .fillMaxSize()
+            ) {
+                composable(route = AppDestinations.HOME.route) {
+                    MapaScreen(modifier = Modifier.fillMaxSize())
+                }
+                composable(route = AppDestinations.FAVORITES.route) {
+                    ZonasFrecuentesScreen(navController = navController, modifier = Modifier.fillMaxSize())
+                }
+                composable(route = AppDestinations.CITAS.route) {
+                    CitasUI(modifier = Modifier.fillMaxSize())
+                }
+                composable(route = AppDestinations.PROFILE.route) {
+                    PerfilScreen(modifier = Modifier.fillMaxSize())
+                }
+                composable(route = "seleccionarUbicacion") {
+                    SeleccionarUbicacionScreen(
+                        onCancelar = { navController.popBackStack() },
+                        onUbicacionSeleccionada = { resultado ->
+                            navController.previousBackStackEntry
+                                ?.savedStateHandle
+                                ?.set("ubicacion_seleccionada", resultado)
+                            navController.popBackStack()
+                        }
+                    )
+                }
             }
         }
     }
 }
 
-// Enum actualizado con el nuevo destino y en el orden correcto
+
 enum class AppDestinations(
     val route: String,
     val label: String,
     val icon: ImageVector,
 ) {
     HOME("mapa", "Mapa", Icons.Default.Map),
-    FAVORITES("zonas_frecuentes", "Zonas Frecuentes", Icons.Outlined.Star),
+    FAVORITES("zonas_frecuentes", "     Zonas\nFrecuentes", Icons.Outlined.Star),
     CITAS("citas", "Citas", Icons.Default.Event), // Nuevo destino
     PROFILE("perfil", "Perfil", Icons.Default.AccountBox),
 }

@@ -1,7 +1,7 @@
 package com.example.movilsecure_v.modelo.repositorio
 
 import android.app.Application
-import com.example.movilsecure_v.modelo.Cita
+import com.example.movilsecure_v.modelo.entidades.Cita
 import com.example.movilsecure_v.modelo.basedatos.AppDatabase
 import java.util.Date
 
@@ -11,6 +11,10 @@ class RepositorioCitas(application: Application) {
 
     suspend fun GuardarDatosCita(cita: Cita) {
         citasDao.InsertarDatosCita(cita)
+    }
+
+    suspend fun guardarActualizacion(cita: Cita) {
+        citasDao.actualizarDatosCita(cita)
     }
 
     /**

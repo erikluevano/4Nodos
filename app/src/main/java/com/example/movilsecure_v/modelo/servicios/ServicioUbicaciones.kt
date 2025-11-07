@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.modelo.repositorio
+package com.example.movilsecure_v.modelo.servicios
 
 import com.example.movilsecure_v.modelo.entidades.PlaceDetailsResponse
 import com.example.movilsecure_v.modelo.entidades.PlacesResponse
@@ -7,7 +7,6 @@ import retrofit2.http.Query
 
 interface ServicioUbicaciones {
 
-    // Nueva búsqueda por texto para la SearchBar
     @GET("maps/api/place/textsearch/json")
     suspend fun textSearch(
         @Query("query") query: String,

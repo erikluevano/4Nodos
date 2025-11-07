@@ -2,6 +2,7 @@
 
 package com.example.movilsecure_v.modelo.repositorio
 
+import com.example.movilsecure_v.modelo.servicios.ZonaFrecuenteDao
 import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
 import kotlinx.coroutines.flow.Flow
 

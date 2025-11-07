@@ -1,7 +1,7 @@
 
 package com.example.movilsecure_v.modelo.repositorio
 
-import com.example.movilsecure_v.modelo.PerfilAdultoMayor
+import com.example.movilsecure_v.modelo.entidades.PerfilAdultoMayor
 import kotlinx.coroutines.flow.Flow
 
 class RepositorioPerfil(private val perfilDao: PerfilDao) {

@@ -5,7 +5,7 @@ import androidx.room.Dao
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.movilsecure_v.modelo.PerfilAdultoMayor
+import com.example.movilsecure_v.modelo.entidades.PerfilAdultoMayor
 import kotlinx.coroutines.flow.Flow
 
 @Dao

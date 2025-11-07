@@ -3,7 +3,7 @@ package com.example.movilsecure_v.viewmodel
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
-import com.example.movilsecure_v.modelo.Cita
+import com.example.movilsecure_v.modelo.entidades.Cita
 import com.example.movilsecure_v.modelo.repositorio.RepositorioCitas
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +13,7 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.text.ParseException
 
 class CitasViewModel(application: Application) : AndroidViewModel(application) {
 
@@ -37,12 +38,11 @@ class CitasViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun EnviarFormularioRegistro(fechaStr: String, horaStr: String, lugar: String, motivo: String) {
-        if (lugar.isBlank()) {
-            _uiState.value = UiState.Error("El campo 'Lugar' es obligatorio.")
+        if (!VerificarCamposObligatoriosEstenLlenos(fechaStr, horaStr, lugar)) {
+
             return
         }
-        val fechaDate = validarYConvertirFecha(fechaStr) ?: return
-        if (!validarHora(horaStr)) return
+        val fechaDate = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault()).parse(fechaStr)!!
 
         val nuevaCita = Cita(fecha = fechaDate, hora = horaStr, lugar = lugar, motivo = motivo)
         GuardarDatosCita(nuevaCita)
@@ -75,6 +75,60 @@ class CitasViewModel(application: Application) : AndroidViewModel(application) {
         }
     }
 
+    fun posponerCita(citaOriginal: Cita, nuevaFechaStr: String, nuevaHoraStr: String) {
+        // 1. Validar que los campos no estén vacíos y tengan el formato correcto.
+        if (nuevaFechaStr.isBlank() || nuevaHoraStr.isBlank()) {
+            _uiState.value = UiState.Error("Debes proporcionar una fecha y una hora.")
+            return
+        }
+        val nuevaFechaDate = validarYConvertirFecha(nuevaFechaStr)
+        if (nuevaFechaDate == null) {
+            // El mensaje de error ya se estableció en la función de validación
+            return
+        }
+        if (!validarHora(nuevaHoraStr)) {
+            // El mensaje de error ya se estableció
+            return
+        }
+
+        // 2. Combinar fecha y hora para poder compararlas
+        val formatoCompleto = SimpleDateFormat("dd/MM/yyyy HH:mm", Locale.getDefault())
+        try {
+            val formatoFechaOriginal = SimpleDateFormat("dd/MM/yyyy", Locale.getDefault())
+            val fechaOriginalStr = formatoFechaOriginal.format(citaOriginal.fecha)
+
+            val originalCombinedDateTime = formatoCompleto.parse("$fechaOriginalStr ${citaOriginal.hora}")!!
+            val newCombinedDateTime = formatoCompleto.parse("$nuevaFechaStr $nuevaHoraStr")!!
+
+            // 3. Validar que la nueva fecha/hora sea posterior a la original
+            if (!newCombinedDateTime.after(originalCombinedDateTime)) {
+                _uiState.value = UiState.Error("La nueva fecha y hora deben ser posteriores a la cita original.")
+                return
+            }
+
+        } catch (e: ParseException) {
+            _uiState.value = UiState.Error("Error interno al comparar las fechas.")
+            return
+        }
+
+
+        // 4. Si la validación es exitosa, proceder a guardar.
+        val citaActualizada = citaOriginal.copy(
+            fecha = nuevaFechaDate,
+            hora = nuevaHoraStr
+        )
+
+        viewModelScope.launch {
+            try {
+                repositorio.guardarActualizacion(citaActualizada)
+                refrescarCitas() // Actualizar la lista en la UI
+                _uiState.value = UiState.Exito("¡Cita pospuesta con éxito!")
+            } catch (e: Exception) {
+                _uiState.value = UiState.Error("Error al posponer la cita. Inténtalo de nuevo.")
+            }
+        }
+    }
+
     fun ObtenerCitasRegistradas(): List<Cita> {
         // este metodo devuelve la lista actual de citas que tengo en el viewmodel
         return _citas.value
@@ -93,6 +147,29 @@ class CitasViewModel(application: Application) : AndroidViewModel(application) {
         }
         _filtroActual.value = nuevoFiltro
         refrescarCitas()
+    }
+
+    /**
+     * Verifica que los campos obligatorios del formulario no estén vacíos y tengan el formato correcto.
+     * Actualiza el _uiState con un mensaje de error si la validación falla.
+     * @return `true` si todos los campos son válidos, `false` en caso contrario.
+     */
+    fun VerificarCamposObligatoriosEstenLlenos(fechaStr: String, horaStr: String, lugar: String): Boolean {
+        if (lugar.isBlank()) {
+            _uiState.value = UiState.Error("El campo 'Lugar' es obligatorio.")
+            return false
+        }
+
+        if (validarYConvertirFecha(fechaStr) == null) {
+            return false
+        }
+
+        if (!validarHora(horaStr)) {
+            return false
+        }
+
+
+        return true
     }
 
     private fun validarYConvertirFecha(fechaStr: String): Date? {

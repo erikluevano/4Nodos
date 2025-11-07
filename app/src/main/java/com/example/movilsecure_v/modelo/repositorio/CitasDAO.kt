@@ -5,7 +5,8 @@ import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.OnConflictStrategy
 import androidx.room.Query
-import com.example.movilsecure_v.modelo.Cita
+import androidx.room.Update
+import com.example.movilsecure_v.modelo.entidades.Cita
 
 @Dao
 interface CitasDAO {
@@ -15,6 +16,13 @@ interface CitasDAO {
      */
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun InsertarDatosCita(cita: Cita)
+
+
+    /**
+     * Actualiza una cita existente en la base de datos.
+     */
+    @Update
+    suspend fun actualizarDatosCita(cita: Cita)
 
     /**
      * Obtiene todas las citas de la base de datos, ordenadas por fecha ascendente.

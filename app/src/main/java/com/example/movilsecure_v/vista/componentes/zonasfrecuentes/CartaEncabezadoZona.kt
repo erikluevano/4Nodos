@@ -48,7 +48,6 @@ fun ZonasHeaderCard(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = "Zonas Frecuentes",
-                    // CAMBIO: Se reduce el tamaño del título
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold
                 )
@@ -69,7 +68,6 @@ fun ZonasHeaderCard(
                         Spacer(modifier = Modifier.width(4.dp))
                         Text(
                             text = "Agregar zona",
-                            // CAMBIO: Texto del botón más pequeño
                             style = MaterialTheme.typography.labelMedium
                         )
                     }

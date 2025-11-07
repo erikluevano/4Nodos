@@ -5,12 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
-import com.example.movilsecure_v.modelo.Cita
-import com.example.movilsecure_v.modelo.PerfilAdultoMayor
+import com.example.movilsecure_v.modelo.entidades.Cita
+import com.example.movilsecure_v.modelo.entidades.PerfilAdultoMayor
 import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
 import com.example.movilsecure_v.modelo.repositorio.CitasDAO
 import com.example.movilsecure_v.modelo.repositorio.PerfilDao
-import com.example.movilsecure_v.modelo.repositorio.ZonaFrecuenteDao
+import com.example.movilsecure_v.modelo.servicios.ZonaFrecuenteDao
 
 // Se añade Cita a las entidades, se sube la versión y se registra el TypeConverter
 @Database(entities = [ZonaFrecuente::class, PerfilAdultoMayor::class, Cita::class], version = 3, exportSchema = false)

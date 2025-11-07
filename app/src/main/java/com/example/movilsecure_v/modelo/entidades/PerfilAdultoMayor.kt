@@ -1,5 +1,4 @@
-
-package com.example.movilsecure_v.modelo
+package com.example.movilsecure_v.modelo.entidades
 
 import androidx.room.Entity
 import androidx.room.PrimaryKey
@@ -17,7 +16,13 @@ data class PerfilAdultoMayor(
     val medicamentosActuales: String,
     val alergias: String
 ) {
-    // La función validarDatos se usaba en el ViewModel,
-    // por lo que ya no es necesaria dentro de la entidad.
-    // Se puede mantener si se le da otro uso, pero para la persistencia no es requerida.
+    fun validarDatos(): Boolean {
+        // El historial médico es opcional, los demás campos no.
+        return nombre.isNotBlank() &&
+                fechaNacimiento.isNotBlank() &&
+                sexo.isNotBlank() &&
+                tipoDeSangre.isNotBlank() &&
+                medicamentosActuales.isNotBlank() &&
+                alergias.isNotBlank()
+    }
 }
