@@ -46,13 +46,13 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
 
     private val _listaMedicamentos = MutableStateFlow<List<MedicamentoDisplayInfo>>(emptyList())
     val listaMedicamentos: StateFlow<List<MedicamentoDisplayInfo>> = _listaMedicamentos.asStateFlow()
-    
+
     private val _uiState = MutableStateFlow(MedicamentosGlobalState())
     val uiState: StateFlow<MedicamentosGlobalState> = _uiState.asStateFlow()
 
 
     fun EnviarFormularioRegistro(medicamento: Medicamento) {
-        viewModelScope.launch { 
+        viewModelScope.launch {
             repositorio.GuardarDatosMedicamento(medicamento)
             ObtenerListaMedicamentos()
             _uiState.update { it.copy(mostrandoFormulario = false, mostrandoDialogoExito = true, nombre = "", frecuencia = "", horaInicio = "") }
@@ -99,6 +99,13 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
             if (false) {
                 med?.let { SolicitaReingresoDatos(it) }
             }
+        }
+    }
+
+    fun eliminarMedicamento(id: Int) {
+        viewModelScope.launch {
+            repositorio.eliminarMedicamento(id)
+            ObtenerListaMedicamentos()
         }
     }
 

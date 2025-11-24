@@ -15,4 +15,8 @@ class RepositorioMedicamentos(private val medicamentosDAO: MedicamentosDAO) {
     suspend fun obtenerMedicamentoPorId(id: Int): Medicamento? {
         return medicamentosDAO.obtenerMedicamentoPorId(id)
     }
+
+    suspend fun eliminarMedicamento(id: Int) {
+        medicamentosDAO.eliminarMedicamento(id)
+    }
 }

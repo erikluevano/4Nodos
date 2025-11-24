@@ -17,4 +17,7 @@ interface MedicamentosDAO {
 
     @Query("SELECT * FROM medicamentos WHERE ID = :id")
     suspend fun obtenerMedicamentoPorId(id: Int): Medicamento?
+
+    @Query("DELETE FROM medicamentos WHERE ID = :id")
+    suspend fun eliminarMedicamento(id: Int)
 }
