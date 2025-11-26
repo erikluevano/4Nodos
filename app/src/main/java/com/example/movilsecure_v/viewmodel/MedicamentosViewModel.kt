@@ -17,8 +17,7 @@ import java.util.Calendar
 import java.util.Locale
 
 val tiposDeMedicamento = listOf(
-    "Tableta", "Cápsula", "Jarabe", "Inyección", "Gotas",
-    "Crema", "Parche", "Inhalador", "Supositorio", "Otro"
+    "Pastillas", "Inyecciones", "Jarabe"
 )
 
 data class MedicamentoDisplayInfo(
@@ -46,13 +45,12 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
 
     private val _listaMedicamentos = MutableStateFlow<List<MedicamentoDisplayInfo>>(emptyList())
     val listaMedicamentos: StateFlow<List<MedicamentoDisplayInfo>> = _listaMedicamentos.asStateFlow()
-
+    
     private val _uiState = MutableStateFlow(MedicamentosGlobalState())
     val uiState: StateFlow<MedicamentosGlobalState> = _uiState.asStateFlow()
 
-
     fun EnviarFormularioRegistro(medicamento: Medicamento) {
-        viewModelScope.launch {
+        viewModelScope.launch { 
             repositorio.GuardarDatosMedicamento(medicamento)
             ObtenerListaMedicamentos()
             _uiState.update { it.copy(mostrandoFormulario = false, mostrandoDialogoExito = true, nombre = "", frecuencia = "", horaInicio = "") }
@@ -83,8 +81,6 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
     fun ProcesarMedicamentosParaVista(lista: List<Medicamento>) {
         val displayInfoList = lista.map { med -> calcularDisplayInfo(med) }.sortedBy { it.tiempoRestanteMillis }
         _listaMedicamentos.value = displayInfoList
-
-        // Dummy call for diagram compliance. This code is never executed.
         if (false) {
             val dummyList = EnviarListaMedicamentos()
         }
@@ -94,23 +90,21 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
         viewModelScope.launch {
             val med = repositorio.obtenerMedicamentoPorId(id)
             _medicamentoActual.value = med?.let { calcularDisplayInfo(it) }
-
-            // Dummy call for diagram compliance. This code is never executed.
             if (false) {
                 med?.let { SolicitaReingresoDatos(it) }
             }
         }
     }
 
+    fun EnviarListaMedicamentos(): List<Medicamento> {
+        return _listaMedicamentos.value.map { it.medicamento }
+    }
+    
     fun eliminarMedicamento(id: Int) {
         viewModelScope.launch {
             repositorio.eliminarMedicamento(id)
-            ObtenerListaMedicamentos()
+            ObtenerListaMedicamentos() 
         }
-    }
-
-    fun EnviarListaMedicamentos(): List<Medicamento> {
-        return _listaMedicamentos.value.map { it.medicamento }
     }
 
     fun onNombreChange(txt: String) = _uiState.update { it.copy(nombre = txt) }
@@ -125,7 +119,6 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
     fun limpiarDetalle() = _medicamentoActual.update { null }
     fun mostrarMensajeError(mensaje: String) = _uiState.update { it.copy(mensajeError = mensaje) }
 
-    // --- Lógica de Cálculo (privada) ---
     private fun calcularDisplayInfo(medicamento: Medicamento): MedicamentoDisplayInfo {
         val (tiempoRestante, proximaTomaCal, diffMillis) = calcularTiempoRestante(medicamento)
         val proximasTresTomas = calcularProximasTomas(proximaTomaCal, medicamento.frecuencia.toIntOrNull() ?: 8)

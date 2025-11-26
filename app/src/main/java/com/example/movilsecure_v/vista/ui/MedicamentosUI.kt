@@ -18,6 +18,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.text.font.FontWeight
@@ -35,48 +36,61 @@ import com.example.movilsecure_v.viewmodel.tiposDeMedicamento
 @Composable
 fun MedicamentosUI(
     viewModel: MedicamentosViewModel,
-    onMedicamentoClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
     val context = LocalContext.current
     val uiState by viewModel.uiState.collectAsState()
-    
-    SolicitarListaMedicamentos(viewModel)
+    var selectedMedicamentoId by remember { mutableStateOf<Int?>(null) }
 
-    uiState.mensajeError?.let {
-        MostrarMensaje(mensaje = it, context = context)
-        viewModel.onMensajeErrorMostrado()
-    }
+    val medicamentoDetalle by viewModel.medicamentoActual.collectAsState()
 
-    if (false) {
-        MostrarDetallesCompleto(med = Medicamento(nombre = "", tipoMedicamento = "", horaInicio = "", frecuencia = ""))
-    }
+    if (selectedMedicamentoId == null) {
+        // --- VISTA DE LISTA ---
+        SolicitarListaMedicamentos(viewModel)
 
-    Column(
-        modifier = modifier.fillMaxSize().padding(16.dp),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        EncabezadoMedicamentos()
-        Spacer(modifier = Modifier.height(24.dp))
+        uiState.mensajeError?.let {
+            MostrarMensaje(mensaje = it, context = context)
+            viewModel.onMensajeErrorMostrado()
+        }
 
-        mostrarBoton_AgregarMedicamento(viewModel = viewModel)
+        Column(
+            modifier = modifier.fillMaxSize().padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            EncabezadoMedicamentos()
+            Spacer(modifier = Modifier.height(24.dp))
+            mostrarBoton_AgregarMedicamento(viewModel = viewModel)
+            Spacer(modifier = Modifier.height(32.dp))
+            val lista by viewModel.listaMedicamentos.collectAsState()
+            MostrarListaInicial(lista = lista, onMedicamentoClick = { id -> selectedMedicamentoId = id })
+        }
+
+        if (uiState.mostrandoFormulario) {
+            MostrarFormulario(
+                uiState = uiState,
+                viewModel = viewModel,
+                onDismiss = { viewModel.ocultarFormulario() }
+            )
+        }
+
+        if (uiState.mostrandoDialogoExito) {
+            DialogoExito(onDismiss = { viewModel.ocultarDialogoExito() })
+        }
+    } else {
+        // --- VISTA DE DETALLE ---
+        val currentId = selectedMedicamentoId!!
+        LaunchedEffect(currentId) {
+            viewModel.ObtenerDetallesMedicamento(currentId)
+        }
         
-        Spacer(modifier = Modifier.height(32.dp))
-
-        val lista by viewModel.listaMedicamentos.collectAsState()
-        MostrarListaInicial(lista = lista, onMedicamentoClick = onMedicamentoClick)
-    }
-
-    if (uiState.mostrandoFormulario) {
-        MostrarFormulario(
-            uiState = uiState,
+        MostrarDetallesCompleto(
             viewModel = viewModel,
-            onDismiss = { viewModel.ocultarFormulario() }
+            med = medicamentoDetalle,
+            onBack = {
+                selectedMedicamentoId = null
+                viewModel.limpiarDetalle()
+            }
         )
-    }
-
-    if (uiState.mostrandoDialogoExito) {
-        DialogoExito(onDismiss = { viewModel.ocultarDialogoExito() })
     }
 }
 
@@ -232,9 +246,101 @@ fun MostrarMensaje(mensaje: String, context: Context) {
     Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MostrarDetallesCompleto(med: Medicamento) {
-    Text(text = "Placeholder para detalles de ${med.nombre}", color = Color.Transparent)
+fun MostrarDetallesCompleto(
+    viewModel: MedicamentosViewModel,
+    med: MedicamentoDisplayInfo?,
+    onBack: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var mostrarDialogoConfirmacion by remember { mutableStateOf(false) }
+
+    if (mostrarDialogoConfirmacion && med != null) {
+        mostrarConfirmacionEliminar(
+            onConfirm = {
+                viewModel.eliminarMedicamento(med.medicamento.ID)
+                onBack()
+            },
+            onDismiss = { mostrarDialogoConfirmacion = false }
+        )
+    }
+
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text("Detalle del Medicamento") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Volver")
+                    }
+                }
+            )
+        },
+        modifier = modifier
+    ) { padding ->
+        if (med == null) {
+            Box(modifier = Modifier.fillMaxSize().padding(padding), contentAlignment = Alignment.Center) {
+                CircularProgressIndicator()
+            }
+        } else {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(padding)
+                    .verticalScroll(rememberScrollState())
+                    .padding(16.dp),
+                verticalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Text(med.medicamento.nombre, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
+                Spacer(modifier = Modifier.height(4.dp))
+
+                InfoCard(
+                    label = "Horario de inicio",
+                    value = med.medicamento.horaInicio,
+                    icon = Icons.Default.Schedule
+                )
+                InfoCard(
+                    label = "Intervalo entre dosis",
+                    value = "Cada ${med.medicamento.frecuencia} horas",
+                    icon = Icons.Default.Timelapse
+                )
+                InfoCard(
+                    label = "Tipo de medicamento",
+                    value = med.medicamento.tipoMedicamento,
+                    icon = Icons.Default.Medication
+                )
+                InfoCard(
+                    label = "Tiempo para siguiente toma",
+                    value = med.tiempoRestante,
+                    icon = Icons.Default.AccessTime,
+                    isHighlighted = true
+                )
+                InfoCard(
+                    label = "Próximas tomas",
+                    value = med.proximasTomas,
+                    icon = Icons.Default.EventAvailable
+                )
+                InfoCard(
+                    label = "Notificaciones",
+                    value = if (med.medicamento.notificacionesActivas) "Activadas" else "Desactivadas",
+                    icon = if (med.medicamento.notificacionesActivas) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff
+                )
+
+                Spacer(modifier = Modifier.weight(1f))
+
+                Button(
+                    onClick = { mostrarDialogoConfirmacion = true },
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Icon(Icons.Default.Delete, contentDescription = "Eliminar")
+                    Spacer(modifier = Modifier.width(8.dp))
+                    Text("Eliminar Medicamento")
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -319,4 +425,54 @@ fun DialogoExito(onDismiss: () -> Unit) {
             }
         }
     )
+}
+
+@Composable
+private fun mostrarConfirmacionEliminar(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirmar Eliminación") },
+        text = { Text("¿Estás seguro de que deseas eliminar este medicamento? Esta acción no se puede deshacer.") },
+        confirmButton = {
+            Button(
+                onClick = onConfirm,
+                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+            ) {
+                Text("Eliminar")
+            }
+        },
+        dismissButton = {
+            Button(onClick = onDismiss) {
+                Text("Cancelar")
+            }
+        }
+    )
+}
+
+@Composable
+private fun InfoCard(
+    label: String,
+    value: String,
+    icon: ImageVector,
+    isHighlighted: Boolean = false
+) {
+    val backgroundColor = if (isHighlighted) Color(0xFFFFE0B2) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(containerColor = backgroundColor)
+    ) {
+        Row(
+            modifier = Modifier.padding(16.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp))
+            Spacer(modifier = Modifier.width(16.dp))
+            Column {
+                Text(label, style = MaterialTheme.typography.bodySmall)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
+            }
+        }
+    }
 }

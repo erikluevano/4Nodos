@@ -9,7 +9,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.AccountBox
 import androidx.compose.material.icons.filled.Event
 import androidx.compose.material.icons.filled.Map
-import androidx.compose.material.icons.filled.Medication 
+import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
 import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
@@ -19,16 +19,13 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
-import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
 import androidx.navigation.compose.rememberNavController
-import androidx.navigation.navArgument
 import com.example.movilsecure_v.ui.theme.MovilSecure_VTheme
 import com.example.movilsecure_v.viewmodel.MedicamentosViewModel
 import com.example.movilsecure_v.vista.ui.CitasUI
-import com.example.movilsecure_v.vista.ui.DetalleMedicamentoScreen
 import com.example.movilsecure_v.vista.ui.MapaScreen
 import com.example.movilsecure_v.vista.ui.MedicamentosUI
 import com.example.movilsecure_v.vista.ui.PerfilScreen
@@ -72,7 +69,6 @@ fun MovilSecure_VApp() {
                     }
                 }
             ) {
-                // CORREGIDO: Se usa el padding del Scaffold principal
                 AppNavHost(navController = navController, medicamentosViewModel = medicamentosViewModel, modifier = Modifier.padding(scaffoldPadding))
             }
         } else {
@@ -104,27 +100,11 @@ fun AppNavHost(
         composable(route = AppDestinations.MEDICAMENTOS.route) {
             MedicamentosUI(
                 viewModel = medicamentosViewModel,
-                onMedicamentoClick = { id -> navController.navigate("${AppDestinations.MEDICAMENTO_DETAIL.route}/$id") },
                 modifier = Modifier.fillMaxSize()
             )
         }
         composable(route = AppDestinations.PROFILE.route) {
             PerfilScreen(modifier = Modifier.fillMaxSize())
-        }
-        composable(
-            route = "${AppDestinations.MEDICAMENTO_DETAIL.route}/{medicamentoId}",
-            arguments = listOf(navArgument("medicamentoId") { type = NavType.IntType })
-        ) { backStackEntry ->
-            val medicamentoId = requireNotNull(backStackEntry.arguments?.getInt("medicamentoId"))
-            DetalleMedicamentoScreen(
-                viewModel = medicamentosViewModel,
-                onBack = { 
-                    medicamentosViewModel.limpiarDetalle()
-                    navController.popBackStack() 
-                },
-                medicamentoId = medicamentoId, 
-                modifier = Modifier.fillMaxSize()
-            )
         }
          composable(route = "seleccionarUbicacion") {
             SeleccionarUbicacionScreen(
