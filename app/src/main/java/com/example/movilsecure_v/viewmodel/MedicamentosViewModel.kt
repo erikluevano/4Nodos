@@ -50,6 +50,18 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
     val uiState: StateFlow<MedicamentosGlobalState> = _uiState.asStateFlow()
 
     fun EnviarFormularioRegistro(medicamento: Medicamento) {
+        // --- INICIO DE LA NUEVA LÓGICA DE VALIDACIÓN ---
+        if (medicamento.nombre.isBlank()) { // Verifica si el nombre está vacío o solo contiene espacios
+            _uiState.update { 
+                it.copy(
+                    mensajeError = "El nombre del medicamento no puede estar vacío.", // Mensaje de error para la UI
+                    mostrandoFormulario = true // Mantiene el formulario abierto para corrección
+                ) 
+            }
+            return // Detiene la ejecución si la validación falla
+        }
+        // --- FIN DE LA NUEVA LÓGICA DE VALIDACIÓN ---
+
         viewModelScope.launch { 
             repositorio.GuardarDatosMedicamento(medicamento)
             ObtenerListaMedicamentos()
@@ -154,7 +166,7 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
             proximas.add(formatoFecha.format(tomaActual.time))
             tomaActual.add(Calendar.HOUR_OF_DAY, frecuenciaHoras)
         }
-        return proximas.joinToString("\n")
+        return proximas.joinToString("")
     }
 
     companion object {
