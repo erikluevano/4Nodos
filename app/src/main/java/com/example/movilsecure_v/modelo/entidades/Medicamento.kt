@@ -14,6 +14,5 @@ data class Medicamento(
     val tipoMedicamento: String,
     val horaInicio: String,
     val frecuencia: String,
-    // AÑADIDO: Campo para guardar el estado de las notificaciones
     val notificacionesActivas: Boolean = true 
 )

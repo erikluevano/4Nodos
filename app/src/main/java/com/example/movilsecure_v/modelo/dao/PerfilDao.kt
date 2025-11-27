@@ -1,5 +1,4 @@
-
-package com.example.movilsecure_v.modelo.repositorio
+package com.example.movilsecure_v.modelo.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -14,7 +13,7 @@ interface PerfilDao {
     @Query("SELECT * FROM perfiles_adulto_mayor ORDER BY nombre ASC")
     fun getAllPerfiles(): Flow<List<PerfilAdultoMayor>>
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insertPerfil(perfil: PerfilAdultoMayor)
 
     @Query("DELETE FROM perfiles_adulto_mayor WHERE id = :perfilId")

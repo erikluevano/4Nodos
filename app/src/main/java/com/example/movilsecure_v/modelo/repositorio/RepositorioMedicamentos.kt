@@ -1,5 +1,6 @@
 package com.example.movilsecure_v.modelo.repositorio
 
+import com.example.movilsecure_v.modelo.dao.MedicamentosDAO
 import com.example.movilsecure_v.modelo.entidades.Medicamento
 
 class RepositorioMedicamentos(private val medicamentosDAO: MedicamentosDAO) {

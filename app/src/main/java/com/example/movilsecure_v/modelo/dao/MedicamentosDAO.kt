@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.modelo.repositorio
+package com.example.movilsecure_v.modelo.dao
 
 import androidx.room.Dao
 import androidx.room.Insert
@@ -9,7 +9,7 @@ import com.example.movilsecure_v.modelo.entidades.Medicamento
 @Dao
 interface MedicamentosDAO {
 
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun InsertarDatosMedicamento(medicamento: Medicamento)
 
     @Query("SELECT * FROM medicamentos ORDER BY nombre ASC")

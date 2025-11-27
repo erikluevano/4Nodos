@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.modelo.repositorio
+package com.example.movilsecure_v.modelo.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -14,7 +14,7 @@ interface CitasDAO {
     /**
      * Inserta una nueva cita en la base de datos. Si la cita ya existe, la reemplaza.
      */
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun InsertarDatosCita(cita: Cita)
 
 

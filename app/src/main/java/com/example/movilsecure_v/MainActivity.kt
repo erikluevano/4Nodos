@@ -12,10 +12,10 @@ import androidx.compose.material.icons.filled.Map
 import androidx.compose.material.icons.filled.Medication
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.*
-import androidx.compose.material3.adaptive.navigationsuite.NavigationSuiteScaffold
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavGraph.Companion.findStartDestination
 import androidx.navigation.NavHostController
@@ -26,11 +26,11 @@ import androidx.navigation.compose.rememberNavController
 import com.example.movilsecure_v.ui.theme.MovilSecure_VTheme
 import com.example.movilsecure_v.viewmodel.MedicamentosViewModel
 import com.example.movilsecure_v.vista.ui.CitasUI
-import com.example.movilsecure_v.vista.ui.MapaScreen
+import com.example.movilsecure_v.vista.ui.MapaUI
 import com.example.movilsecure_v.vista.ui.MedicamentosUI
 import com.example.movilsecure_v.vista.ui.PerfilScreen
 import com.example.movilsecure_v.vista.ui.SeleccionarUbicacionScreen
-import com.example.movilsecure_v.vista.ui.ZonasFrecuentesScreen
+import com.example.movilsecure_v.vista.ui.ZonasFrecuentesUI
 
 
 class MainActivity : ComponentActivity() {
@@ -45,6 +45,7 @@ class MainActivity : ComponentActivity() {
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class) // Anotación necesaria para TopAppBar
 @Composable
 fun MovilSecure_VApp() {
     val navController = rememberNavController()
@@ -53,46 +54,70 @@ fun MovilSecure_VApp() {
 
     val medicamentosViewModel: MedicamentosViewModel = viewModel(factory = MedicamentosViewModel.Factory)
 
-    val showNavigationSuite = AppDestinations.entries.any { it.route == currentRoute && it.showInBottomBar }
+    val showNavigationAndHeader = AppDestinations.entries.any { it.route == currentRoute && it.showInBottomBar }
 
-    Scaffold(modifier = Modifier.fillMaxSize()) { scaffoldPadding ->
-        if (showNavigationSuite) {
-            NavigationSuiteScaffold(
-                navigationSuiteItems = {
+    // --- CAMBIO PRINCIPAL: Usamos Scaffold para un control total del layout ---
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        // 1. AÑADIMOS EL ENCABEZADO (TopAppBar) ESTÁTICO
+        topBar = {
+            if (showNavigationAndHeader) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            "MovilSecure",
+                            fontWeight = FontWeight.Bold
+                        )
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        titleContentColor = MaterialTheme.colorScheme.onSurface
+                    )
+                )
+            }
+        },
+        // 2. USAMOS NavigationBar PARA LA BARRA INFERIOR (soluciona el layout)
+        bottomBar = {
+            if (showNavigationAndHeader) {
+                NavigationBar {
                     AppDestinations.entries.filter { it.showInBottomBar }.forEach { destination ->
-                        item(
+                        NavigationBarItem(
                             icon = { Icon(destination.icon, contentDescription = destination.label) },
-                            label = { Text(destination.label) },
+                            label = { Text(destination.label) }, // El texto se ajusta y centra correctamente
                             selected = currentRoute == destination.route,
                             onClick = { navigateTo(navController, destination.route) }
                         )
                     }
                 }
-            ) {
-                AppNavHost(navController = navController, medicamentosViewModel = medicamentosViewModel, modifier = Modifier.padding(scaffoldPadding))
             }
-        } else {
-             AppNavHost(navController = navController, medicamentosViewModel = medicamentosViewModel, modifier = Modifier.padding(scaffoldPadding))
         }
+    ) { scaffoldPadding ->
+        // El contenido de la app (NavHost) se coloca aquí, con el padding correcto
+        // para no quedar debajo de las barras superior e inferior.
+        AppNavHost(
+            navController = navController,
+            medicamentosViewModel = medicamentosViewModel,
+            modifier = Modifier.padding(scaffoldPadding)
+        )
     }
 }
 
 @Composable
 fun AppNavHost(
-    navController: NavHostController, 
-    medicamentosViewModel: MedicamentosViewModel, 
+    navController: NavHostController,
+    medicamentosViewModel: MedicamentosViewModel,
     modifier: Modifier = Modifier
 ) {
     NavHost(
         navController = navController,
         startDestination = AppDestinations.HOME.route,
-        modifier = modifier
+        modifier = modifier // El modifier con el padding se aplica aquí
     ) {
         composable(route = AppDestinations.HOME.route) {
-            MapaScreen(modifier = Modifier.fillMaxSize())
+            MapaUI(modifier = Modifier.fillMaxSize())
         }
         composable(route = AppDestinations.FAVORITES.route) {
-            ZonasFrecuentesScreen(navController = navController, modifier = Modifier.fillMaxSize())
+            ZonasFrecuentesUI(navController = navController, modifier = Modifier.fillMaxSize())
         }
         composable(route = AppDestinations.CITAS.route) {
             CitasUI(modifier = Modifier.fillMaxSize())
@@ -106,7 +131,7 @@ fun AppNavHost(
         composable(route = AppDestinations.PROFILE.route) {
             PerfilScreen(modifier = Modifier.fillMaxSize())
         }
-         composable(route = "seleccionarUbicacion") {
+        composable(route = "seleccionarUbicacion") {
             SeleccionarUbicacionScreen(
                 onCancelar = { navController.popBackStack() },
                 onUbicacionSeleccionada = { resultado ->
@@ -126,7 +151,6 @@ fun navigateTo(navController: NavHostController, route: String) {
     }
 }
 
-
 enum class AppDestinations(
     val route: String,
     val label: String,
@@ -134,7 +158,7 @@ enum class AppDestinations(
     val showInBottomBar: Boolean = true
 ) {
     HOME("mapa", "Mapa", Icons.Default.Map),
-    FAVORITES("zonas_frecuentes", "Zonas Frecuentes", Icons.Outlined.Star),
+    FAVORITES("zonas_frecuentes", "    Zonas    Frecuentes", Icons.Outlined.Star),
     CITAS("citas", "Citas", Icons.Default.Event),
     MEDICAMENTOS("medicamentos", "Medicamentos", Icons.Default.Medication),
     PROFILE("perfil", "Perfil", Icons.Default.AccountBox),

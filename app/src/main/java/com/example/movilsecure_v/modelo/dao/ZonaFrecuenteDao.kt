@@ -1,4 +1,4 @@
-package com.example.movilsecure_v.modelo.servicios
+package com.example.movilsecure_v.modelo.dao
 
 import androidx.room.Dao
 import androidx.room.Delete
@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.Flow
 interface ZonaFrecuenteDao {
 
     // Inserta una nueva zona. Si ya existe, la reemplaza.
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    @Insert(onConflict = OnConflictStrategy.Companion.REPLACE)
     suspend fun insert(zona: ZonaFrecuente)
 
     // Actualiza una zona existente

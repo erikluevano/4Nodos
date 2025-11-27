@@ -17,7 +17,6 @@ data class PerfilAdultoMayor(
     val alergias: String
 ) {
     fun validarDatos(): Boolean {
-        // El historial médico es opcional, los demás campos no.
         return nombre.isNotBlank() &&
                 fechaNacimiento.isNotBlank() &&
                 sexo.isNotBlank() &&

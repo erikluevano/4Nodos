@@ -18,14 +18,13 @@ import com.example.movilsecure_v.modelo.entidades.PlaceDetails
 import com.example.movilsecure_v.modelo.entidades.UbicacionResultado
 import com.example.movilsecure_v.modelo.entidades.ZonaFrecuente
 import com.example.movilsecure_v.modelo.repositorio.RepositorioZonas
-import com.example.movilsecure_v.vista.componentes.mapa.RouteDialog
 import com.example.movilsecure_v.vista.componentes.zonasfrecuentes.*
 import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModel
 import com.example.movilsecure_v.viewmodel.ZonaFrecuenteViewModelFactory
 import com.google.android.gms.maps.model.LatLng
 
 @Composable
-fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostController) {
+fun ZonasFrecuentesUI(modifier: Modifier = Modifier, navController: NavHostController) {
     val context = LocalContext.current
     val factory = ZonaFrecuenteViewModelFactory(RepositorioZonas(AppDatabase.getDatabase(context).zonaFrecuenteDao()))
     val viewModel: ZonaFrecuenteViewModel = viewModel(factory = factory)
@@ -82,7 +81,7 @@ fun ZonasFrecuentesScreen(modifier: Modifier = Modifier, navController: NavHostC
     }
 
     zonaParaRuta?.let {
-        RouteDialog(
+        DialogoRuta(
             place = it.toPlaceDetails(),
             onClose = { zonaParaRuta = null },
             onStartNavigation = {

@@ -1,4 +1,4 @@
-// Archivo: viewmodel/ZonaFrecuenteVM.kt
+// Archivo: viewmodel/ZonaFrecuenteViewModel.kt
 
 package com.example.movilsecure_v.viewmodel
 

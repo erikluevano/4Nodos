@@ -427,12 +427,12 @@ private fun CitaCard(cita: Cita, onClick: () -> Unit) {
                 val formatoFecha = SimpleDateFormat("dd 'de' MMMM 'de' yyyy", Locale.getDefault())
                 val textoFechaHora = "${formatoFecha.format(cita.fecha)} - ${cita.hora}"
 
-                InfoRow(icon = Icons.Default.AccessTime, text = textoFechaHora)
+                FilaInformacion(icon = Icons.Default.AccessTime, text = textoFechaHora)
                 Spacer(modifier = Modifier.height(8.dp))
-                InfoRow(icon = Icons.Default.LocationOn, text = cita.lugar)
+                FilaInformacion(icon = Icons.Default.LocationOn, text = cita.lugar)
                 if (cita.motivo.isNotBlank()) {
                     Spacer(modifier = Modifier.height(8.dp))
-                    InfoRow(icon = Icons.Default.Info, text = cita.motivo)
+                    FilaInformacion(icon = Icons.Default.Info, text = cita.motivo)
                 }
             }
         }
@@ -601,7 +601,7 @@ private fun MostrarFormulario(
 }
 
 @Composable
-private fun InfoRow(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
+private fun FilaInformacion(icon: androidx.compose.ui.graphics.vector.ImageVector, text: String) {
     Row(verticalAlignment = Alignment.CenterVertically) {
         Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(20.dp))
         Spacer(modifier = Modifier.width(12.dp))
