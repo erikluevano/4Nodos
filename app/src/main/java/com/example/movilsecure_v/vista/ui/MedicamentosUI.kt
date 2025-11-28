@@ -3,7 +3,7 @@ package com.example.movilsecure_v.vista.ui
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.* 
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -14,8 +14,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -126,20 +124,18 @@ fun MostrarListaInicial(lista: List<MedicamentoDisplayInfo>, onMedicamentoClick:
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-// CAMBIO: Añadir el nuevo parámetro onMedicamentoGuardado
-fun MostrarFormulario(
-    uiState: MedicamentosGlobalState,
-    viewModel: MedicamentosViewModel,
+fun MostrarFormulario( // <- Se quitó 'private'
+    uiState: MedicamentosGlobalState, 
+    viewModel: MedicamentosViewModel, 
     onDismiss: () -> Unit,
-    onMedicamentoGuardado: ((Medicamento) -> Unit)? = null // Hacemos el callback opcional
+    onMedicamentoGuardado: (Medicamento) -> Unit = {} // <- Se añadió este parámetro
 ) {
     var tipoMenuAbierto by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
+    // Este método se mantiene intacto
     fun EnviarDatosFormulario(medicamento: Medicamento) {
         viewModel.EnviarFormularioRegistro(medicamento)
-        // CAMBIO: Llamar al callback si existe
-        onMedicamentoGuardado?.invoke(medicamento)
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -199,26 +195,10 @@ fun MostrarFormulario(
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
                 )
-                Spacer(modifier = Modifier.height(24.dp))
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // SECCIÓN DE NOTIFICACIONES ELIMINADA DE LA UI
 
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier.fillMaxWidth().clickable { viewModel.onActivarNotificacionesChange(!uiState.activarNotificaciones) }
-                ) {
-                    Icon(Icons.Default.Notifications, contentDescription = null, modifier = Modifier.padding(end = 16.dp))
-                    Column(modifier = Modifier.weight(1f)) {
-                        Text("Activar notificaciones")
-                        Text(
-                            "Recibe recordatorios en los horarios de la toma.",
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                    Switch(
-                        checked = uiState.activarNotificaciones,
-                        onCheckedChange = viewModel::onActivarNotificacionesChange
-                    )
-                }
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
@@ -229,11 +209,13 @@ fun MostrarFormulario(
                             viewModel.mostrarMensajeError("El formato de la hora debe ser HH:MM.")
                         } else {
                             val nuevoMedicamento = Medicamento(
-                                nombre = uiState.nombre, tipoMedicamento = uiState.tipoMedicamento,
-                                horaInicio = uiState.horaInicio, frecuencia = uiState.frecuencia,
-                                notificacionesActivas = uiState.activarNotificaciones
+                                nombre = uiState.nombre, 
+                                tipoMedicamento = uiState.tipoMedicamento, 
+                                horaInicio = uiState.horaInicio, 
+                                frecuencia = uiState.frecuencia,
+                                notificacionesActivas = uiState.activarNotificaciones // Este valor se mantiene por consistencia de la entidad, aunque no se vea
                             )
-                            // La llamada a EnviarDatosFormulario ahora también ejecutará el callback
+                            onMedicamentoGuardado(nuevoMedicamento) // <- Se notifica a quien llamó al formulario
                             EnviarDatosFormulario(nuevoMedicamento)
                         }
                     },
@@ -332,11 +314,6 @@ fun MostrarDetallesCompleto(
                     value = med.proximasTomas,
                     icon = Icons.Default.EventAvailable
                 )
-                InfoCard(
-                    label = "Notificaciones",
-                    value = if (med.medicamento.notificacionesActivas) "Activadas" else "Desactivadas",
-                    icon = if (med.medicamento.notificacionesActivas) Icons.Default.NotificationsActive else Icons.Default.NotificationsOff
-                )
 
                 Spacer(modifier = Modifier.weight(1f))
 
@@ -382,44 +359,82 @@ private fun MensajeBienvenida() {
 @Composable
 fun TarjetaMedicamento(medInfo: MedicamentoDisplayInfo, onClick: () -> Unit) {
     Card(
-        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onClick),
         elevation = CardDefaults.cardElevation(4.dp)
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
+            // Nombre del medicamento con ícono
             Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(Icons.Default.Medication, contentDescription = "Icono de pastilla", modifier = Modifier.size(40.dp))
+                Icon(
+                    Icons.Default.Medication,
+                    contentDescription = "Icono de pastilla",
+                    modifier = Modifier.size(40.dp)
+                )
                 Spacer(modifier = Modifier.width(16.dp))
                 Text(medInfo.medicamento.nombre, style = MaterialTheme.typography.titleLarge)
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+
+            // --- Tiempo restante para la siguiente toma ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE0B2)),
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Tiempo restante para la siguiente toma:", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "Tiempo restante para la siguiente toma:",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Row(verticalAlignment = Alignment.CenterVertically) {
+
+                    Row(verticalAlignment = Alignment.Top) {
                         Icon(Icons.Default.AccessTime, contentDescription = null)
                         Spacer(modifier = Modifier.width(8.dp))
-                        Text(medInfo.tiempoRestante, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                        Column {
+                            medInfo.tiempoRestante.split(", ").forEach { toma ->
+                                Text(
+                                    text = toma,
+                                    style = MaterialTheme.typography.headlineMedium,
+                                    fontWeight = FontWeight.Bold,
+                                    lineHeight = 24.sp
+                                )
+                            }
+                        }
                     }
                 }
             }
+
             Spacer(modifier = Modifier.height(12.dp))
+
+            // --- Próximas tomas ---
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-                    Text("Próximas horas de tratamiento:", style = MaterialTheme.typography.bodySmall)
+                    Text(
+                        "Próximas horas de tratamiento:",
+                        style = MaterialTheme.typography.bodySmall
+                    )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Text(medInfo.proximasTomas, style = MaterialTheme.typography.bodyMedium, lineHeight = 20.sp)
+
+                    medInfo.proximasTomas.split(", ").forEach { hora ->
+                        Text(
+                            text = hora,
+                            style = MaterialTheme.typography.bodyMedium,
+                            lineHeight = 20.sp
+                        )
+                    }
                 }
             }
         }
     }
 }
+
+
 
 @Composable
 fun DialogoExito(onDismiss: () -> Unit) {

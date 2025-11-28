@@ -166,8 +166,10 @@ class MedicamentosViewModel(private val repositorio: RepositorioMedicamentos) : 
             proximas.add(formatoFecha.format(tomaActual.time))
             tomaActual.add(Calendar.HOUR_OF_DAY, frecuenciaHoras)
         }
-        return proximas.joinToString("")
+        // Usar "\n" para que cada toma vaya en una línea separada
+        return proximas.joinToString("\n")
     }
+
 
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
