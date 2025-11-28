@@ -2,6 +2,7 @@
 package com.example.movilsecure_v.vista.ui
 
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.widget.Toast
@@ -66,7 +67,7 @@ fun MapaUI(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel
             if (isGranted) {
                 hasLocationPermission = true
             } else {
-                Toast.makeText(context, "Permiso de ubicación denegado", Toast.LENGTH_SHORT).show()
+                mostrarMensaje(context, "Permiso de ubicación denegado")
             }
         }
     )
@@ -77,8 +78,9 @@ fun MapaUI(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel
     }
 
     historialUiState.error?.let {
-        Toast.makeText(context, it, Toast.LENGTH_LONG).show()
-        historialViewModel.EnviarMensajeError()
+        mostrarMensajeError(context = context, mensaje = it) {
+            historialViewModel.mensajeErrorMostrado()
+        }
     }
 
     var query by remember { mutableStateOf("") }
@@ -101,7 +103,7 @@ fun MapaUI(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel
     }
 
     if (showHistoryDialog) {
-        MuestraLista(
+        muestraLista(
             historyList = historialUiState.historial,
             onDismiss = { showHistoryDialog = false },
             onItemSelected = { historyItem ->
@@ -111,14 +113,12 @@ fun MapaUI(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel
         )
     }
     selectedHistoryItem?.let {
-        MostrarDetalle(
+
+        muestraDetalle(
             historyItem = it,
             onDismiss = { selectedHistoryItem = null },
             onStartNavigation = {
-                val gmmIntentUri = "google.navigation:q=${it.destino}".toUri()
-                val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                mapIntent.setPackage("com.google.android.apps.maps")
-                context.startActivity(mapIntent)
+                iniciarNavegacion(context, it.destino)
             }
         )
     }
@@ -133,11 +133,8 @@ fun MapaUI(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel
                         origen = origenAddress,
                         destino = place.name
                     )
-                    val gmmIntentUri =
-                        "google.navigation:q=${place.location.latitude},${place.location.longitude}".toUri()
-                    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
-                    mapIntent.setPackage("com.google.android.apps.maps")
-                    context.startActivity(mapIntent)
+                    val destinationQuery = "${place.location.latitude},${place.location.longitude}"
+                    iniciarNavegacion(context, destinationQuery)
                 }
             }
         )
@@ -223,6 +220,26 @@ fun MapaUI(modifier: Modifier = Modifier, mapViewModel: MapViewModel = viewModel
             }
         }
     }
+}
+
+
+@Composable
+private fun mostrarMensajeError(context: Context, mensaje: String, onDismiss: () -> Unit) {
+    LaunchedEffect(mensaje) {
+        Toast.makeText(context, mensaje, Toast.LENGTH_LONG).show()
+        onDismiss()
+    }
+}
+
+private fun iniciarNavegacion(context: Context, destino: String) {
+    val gmmIntentUri = "google.navigation:q=$destino".toUri()
+    val mapIntent = Intent(Intent.ACTION_VIEW, gmmIntentUri)
+    mapIntent.setPackage("com.google.android.apps.maps")
+    context.startActivity(mapIntent)
+}
+
+private fun mostrarMensaje(context: Context, mensaje: String) {
+    Toast.makeText(context, mensaje, Toast.LENGTH_SHORT).show()
 }
 
 @Composable
@@ -490,7 +507,7 @@ private fun BotonesDialogo(onClose: () -> Unit, onStartNavigation: () -> Unit) {
 
 
 @Composable
-fun MuestraLista(
+fun muestraLista(
     historyList: List<RegistroHistorial>,
     onDismiss: () -> Unit,
     onItemSelected: (RegistroHistorial) -> Unit
@@ -540,7 +557,7 @@ fun MuestraLista(
                 } else {
                     LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                         items(historyList) { historyItem ->
-                            HistoryItemCard(
+                            InfoHistorial(
                                 historyItem = historyItem,
                                 onItemClick = { onItemSelected(historyItem) }
                             )
@@ -553,7 +570,7 @@ fun MuestraLista(
 }
 
 @Composable
-fun HistoryItemCard(historyItem: RegistroHistorial, onItemClick: () -> Unit) {
+fun InfoHistorial(historyItem: RegistroHistorial, onItemClick: () -> Unit) {
     val (formattedDate, formattedTime) = try {
         val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         val date = parser.parse(historyItem.fecha)!!
@@ -625,7 +642,7 @@ fun HistoryItemCard(historyItem: RegistroHistorial, onItemClick: () -> Unit) {
 }
 
 @Composable
-fun MostrarDetalle(
+fun muestraDetalle(
     historyItem: RegistroHistorial,
     onDismiss: () -> Unit,
     onStartNavigation: () -> Unit

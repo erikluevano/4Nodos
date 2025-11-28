@@ -1,3 +1,4 @@
+// ruta: app/src/main/java/com/example/movilsecure_v/viewmodel/HistorialViewModel.kt
 package com.example.movilsecure_v.viewmodel
 
 import androidx.lifecycle.ViewModel
@@ -14,7 +15,6 @@ import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-// Estado de la UI para el Historial
 data class HistorialUiState(
     val historial: List<RegistroHistorial> = emptyList(),
     val error: String? = null,
@@ -27,7 +27,6 @@ class HistorialViewModel(private val repositorio: HistorialRepositorio) : ViewMo
     val uiState: StateFlow<HistorialUiState> = _uiState
 
     init {
-
         cargarHistorial()
     }
 
@@ -64,26 +63,29 @@ class HistorialViewModel(private val repositorio: HistorialRepositorio) : ViewMo
         }
     }
 
+    fun enviarListaHistorial(lista: List<RegistroHistorial>) {
+        onResultado(lista)
+    }
+
+
+    fun enviarMensajeError(error: String) {
+        onCargaHistorialFallida(error)
+    }
+
+
     private fun onResultado(lista: List<RegistroHistorial>) {
         _uiState.value = HistorialUiState(historial = lista)
     }
 
-    /**
-     * Metodo privado para manejar un fallo en la carga o guardado.
-     * Cumple con 'onCargaHistorialFallida' y 'enviarMensajeError'.
-     */
+
     private fun onCargaHistorialFallida(error: String) {
         _uiState.value = _uiState.value.copy(error = error, isLoading = false)
     }
 
-    /**
-     * Permite a la UI notificar que el mensaje de error ya se mostró.
-     */
-    fun EnviarMensajeError() {
+    fun mensajeErrorMostrado() {
         _uiState.value = _uiState.value.copy(error = null)
     }
 
-    // --- Factory para la inyección de dependencias ---
     companion object {
         val Factory: ViewModelProvider.Factory = object : ViewModelProvider.Factory {
             @Suppress("UNCHECKED_CAST")

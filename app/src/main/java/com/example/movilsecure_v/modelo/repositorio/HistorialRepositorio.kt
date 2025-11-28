@@ -18,6 +18,10 @@ class HistorialRepositorio(private val historialDAO: HistorialDAO) {
         return historialDAO.getRegistros()
     }
 
+    private fun onResultado(datos: List<RegistroHistorial>): List<RegistroHistorial> {
+        return datos
+    }
+
 
     suspend fun guardarRegistro(registro: RegistroHistorial) {
         historialDAO.insertarRegistro(registro)
