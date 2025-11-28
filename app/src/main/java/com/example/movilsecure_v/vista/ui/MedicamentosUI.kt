@@ -1,9 +1,10 @@
+// Archivo: app/src/main/java/com/example/movilsecure_v/vista/ui/MedicamentosUI.kt
 package com.example.movilsecure_v.vista.ui
 
 import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.* 
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
@@ -14,6 +15,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -69,7 +72,12 @@ fun MedicamentosUI(
             MostrarFormulario(
                 uiState = uiState,
                 viewModel = viewModel,
-                onDismiss = { viewModel.ocultarFormulario() }
+                onDismiss = { viewModel.ocultarFormulario() },
+                // Lógica de guardado cuando se usa desde la pantalla de Medicamentos
+                onMedicamentoGuardado = { nuevoMedicamento ->
+                    viewModel.EnviarFormularioRegistro(nuevoMedicamento)
+                    viewModel.ocultarFormulario()
+                }
             )
         }
 
@@ -82,7 +90,7 @@ fun MedicamentosUI(
         LaunchedEffect(currentId) {
             viewModel.ObtenerDetallesMedicamento(currentId)
         }
-        
+
         MostrarDetallesCompleto(
             viewModel = viewModel,
             med = medicamentoDetalle,
@@ -124,19 +132,14 @@ fun MostrarListaInicial(lista: List<MedicamentoDisplayInfo>, onMedicamentoClick:
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MostrarFormulario( // <- Se quitó 'private'
-    uiState: MedicamentosGlobalState, 
-    viewModel: MedicamentosViewModel, 
+fun MostrarFormulario(
+    uiState: MedicamentosGlobalState,
+    viewModel: MedicamentosViewModel,
     onDismiss: () -> Unit,
-    onMedicamentoGuardado: (Medicamento) -> Unit = {} // <- Se añadió este parámetro
+    onMedicamentoGuardado: (Medicamento) -> Unit // <- Se mantiene el callback
 ) {
     var tipoMenuAbierto by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
-
-    // Este método se mantiene intacto
-    fun EnviarDatosFormulario(medicamento: Medicamento) {
-        viewModel.EnviarFormularioRegistro(medicamento)
-    }
 
     Dialog(onDismissRequest = onDismiss) {
         Surface(shape = MaterialTheme.shapes.large, tonalElevation = 8.dp) {
@@ -146,23 +149,23 @@ fun MostrarFormulario( // <- Se quitó 'private'
 
                 Text("Nombre del medicamento", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 TextField(
-                    modifier = Modifier.fillMaxWidth(), 
-                    value = uiState.nombre, 
-                    onValueChange = viewModel::onNombreChange, 
+                    modifier = Modifier.fillMaxWidth(),
+                    value = uiState.nombre,
+                    onValueChange = viewModel::onNombreChange,
                     placeholder = { Text("Ej: Losartán") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
                     keyboardActions = KeyboardActions(onNext = { focusManager.moveFocus(FocusDirection.Down) })
                 )
                 Spacer(modifier = Modifier.height(16.dp))
-                
+
                 Text("Tipo", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 ExposedDropdownMenuBox(expanded = tipoMenuAbierto, onExpandedChange = { tipoMenuAbierto = !tipoMenuAbierto }) {
                     TextField(
-                        modifier = Modifier.menuAnchor().fillMaxWidth(), 
-                        value = uiState.tipoMedicamento, 
-                        onValueChange = {}, 
-                        readOnly = true, 
+                        modifier = Modifier.menuAnchor().fillMaxWidth(),
+                        value = uiState.tipoMedicamento,
+                        onValueChange = {},
+                        readOnly = true,
                         trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = tipoMenuAbierto) }
                     )
                     ExposedDropdownMenu(expanded = tipoMenuAbierto, onDismissRequest = { tipoMenuAbierto = false }) {
@@ -175,9 +178,9 @@ fun MostrarFormulario( // <- Se quitó 'private'
 
                 Text("Hora de primera toma", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 TextField(
-                    modifier = Modifier.fillMaxWidth(), 
-                    value = uiState.horaInicio, 
-                    onValueChange = viewModel::onHoraInicioChange, 
+                    modifier = Modifier.fillMaxWidth(),
+                    value = uiState.horaInicio,
+                    onValueChange = viewModel::onHoraInicioChange,
                     placeholder = { Text("Formato 24h (HH:MM)") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Next),
@@ -187,18 +190,14 @@ fun MostrarFormulario( // <- Se quitó 'private'
 
                 Text("Frecuencia (horas)", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
                 TextField(
-                    modifier = Modifier.fillMaxWidth(), 
-                    value = uiState.frecuencia, 
-                    onValueChange = viewModel::onFrecuenciaChange, 
+                    modifier = Modifier.fillMaxWidth(),
+                    value = uiState.frecuencia,
+                    onValueChange = viewModel::onFrecuenciaChange,
                     placeholder = { Text("Ej: 8, 12, 24") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions.Default.copy(imeAction = ImeAction.Done),
                     keyboardActions = KeyboardActions(onDone = { focusManager.clearFocus() })
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // SECCIÓN DE NOTIFICACIONES ELIMINADA DE LA UI
-
                 Spacer(modifier = Modifier.height(24.dp))
 
                 Button(
@@ -209,14 +208,15 @@ fun MostrarFormulario( // <- Se quitó 'private'
                             viewModel.mostrarMensajeError("El formato de la hora debe ser HH:MM.")
                         } else {
                             val nuevoMedicamento = Medicamento(
-                                nombre = uiState.nombre, 
-                                tipoMedicamento = uiState.tipoMedicamento, 
-                                horaInicio = uiState.horaInicio, 
+                                nombre = uiState.nombre.trim(),
+                                tipoMedicamento = uiState.tipoMedicamento,
+                                horaInicio = uiState.horaInicio,
                                 frecuencia = uiState.frecuencia,
-                                notificacionesActivas = uiState.activarNotificaciones // Este valor se mantiene por consistencia de la entidad, aunque no se vea
+                                notificacionesActivas = uiState.activarNotificaciones
                             )
-                            onMedicamentoGuardado(nuevoMedicamento) // <- Se notifica a quien llamó al formulario
-                            EnviarDatosFormulario(nuevoMedicamento)
+                            // CAMBIO CLAVE: Notifica al llamador con el nuevo medicamento.
+                            // El llamador (PerfilScreen o MedicamentosUI) decide qué hacer.
+                            onMedicamentoGuardado(nuevoMedicamento)
                         }
                     },
                     modifier = Modifier.fillMaxWidth(),
@@ -228,6 +228,8 @@ fun MostrarFormulario( // <- Se quitó 'private'
     }
 }
 
+// El resto del archivo (SolicitarListaMedicamentos, MostrarDetallesCompleto, etc.) no necesita cambios.
+// ... (pegar el resto de tu código de MedicamentosUI.kt aquí)
 @Composable
 fun SolicitarListaMedicamentos(viewModel: MedicamentosViewModel) {
     LaunchedEffect(key1 = Unit) {
@@ -281,49 +283,24 @@ fun MostrarDetallesCompleto(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(16.dp),
+                    .padding(16.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                Text(med.medicamento.nombre, style = MaterialTheme.typography.headlineLarge, fontWeight = FontWeight.Bold)
-                Spacer(modifier = Modifier.height(4.dp))
+                Text(med.medicamento.nombre, style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+                InfoDetalle(Icons.Default.Category, "Tipo", med.medicamento.tipoMedicamento)
+                InfoDetalle(Icons.Default.WatchLater, "Próxima toma en", med.tiempoRestante)
+                InfoDetalle(Icons.Default.Event, "Próximas 3 tomas", med.proximasTomas)
 
-                InfoCard(
-                    label = "Horario de inicio",
-                    value = med.medicamento.horaInicio,
-                    icon = Icons.Default.Schedule
-                )
-                InfoCard(
-                    label = "Intervalo entre dosis",
-                    value = "Cada ${med.medicamento.frecuencia} horas",
-                    icon = Icons.Default.Timelapse
-                )
-                InfoCard(
-                    label = "Tipo de medicamento",
-                    value = med.medicamento.tipoMedicamento,
-                    icon = Icons.Default.Medication
-                )
-                InfoCard(
-                    label = "Tiempo para siguiente toma",
-                    value = med.tiempoRestante,
-                    icon = Icons.Default.AccessTime,
-                    isHighlighted = true
-                )
-                InfoCard(
-                    label = "Próximas tomas",
-                    value = med.proximasTomas,
-                    icon = Icons.Default.EventAvailable
-                )
-
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(Modifier.height(16.dp))
 
                 Button(
                     onClick = { mostrarDialogoConfirmacion = true },
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
+                    colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error),
+                    modifier = Modifier.fillMaxWidth()
                 ) {
-                    Icon(Icons.Default.Delete, contentDescription = "Eliminar")
-                    Spacer(modifier = Modifier.width(8.dp))
+                    Icon(Icons.Default.DeleteForever, contentDescription = "Eliminar")
+                    Spacer(Modifier.width(8.dp))
                     Text("Eliminar Medicamento")
                 }
             }
@@ -332,173 +309,83 @@ fun MostrarDetallesCompleto(
 }
 
 @Composable
-private fun EncabezadoMedicamentos() {
-    Row(verticalAlignment = Alignment.CenterVertically) {
-        Icon(Icons.Default.Medication, contentDescription = null)
-        Spacer(modifier = Modifier.width(8.dp))
-        Text(text = "Medicamentos", style = MaterialTheme.typography.headlineSmall)
+fun InfoDetalle(icon: ImageVector, label: String, value: String) {
+    Column {
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Icon(icon, contentDescription = label, tint = MaterialTheme.colorScheme.primary)
+            Spacer(Modifier.width(8.dp))
+            Text(label, style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
+        }
+        Spacer(Modifier.height(4.dp))
+        Text(value, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.padding(start = 32.dp))
     }
-    Text("Gestiona los medicamentos y horarios de toma.", style = MaterialTheme.typography.bodyMedium)
+}
+
+
+@Composable
+fun mostrarConfirmacionEliminar(onConfirm: () -> Unit, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Confirmar Eliminación") },
+        text = { Text("¿Estás seguro de que quieres eliminar este medicamento? Esta acción no se puede deshacer.") },
+        confirmButton = { TextButton(onClick = onConfirm) { Text("Eliminar") } },
+        dismissButton = { TextButton(onClick = onDismiss) { Text("Cancelar") } }
+    )
 }
 
 @Composable
-private fun MensajeBienvenida() {
+fun EncabezadoMedicamentos() {
+    Text(
+        text = "Control de Medicamentos",
+        fontSize = 24.sp,
+        fontWeight = FontWeight.Bold,
+        textAlign = TextAlign.Center,
+        modifier = Modifier.fillMaxWidth()
+    )
+}
+
+@Composable
+fun MensajeBienvenida() {
     Column(
         modifier = Modifier.fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Icon(imageVector = Icons.Default.Medication, contentDescription = null, modifier = Modifier.size(100.dp), tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.3f))
+        Icon(
+            imageVector = Icons.Default.MedicalServices,
+            contentDescription = "Icono de bienvenida",
+            modifier = Modifier.size(64.dp),
+            tint = Color.Gray
+        )
         Spacer(modifier = Modifier.height(16.dp))
-        Text("No hay medicamentos registrados", style = MaterialTheme.typography.titleMedium, textAlign = TextAlign.Center)
-        Spacer(modifier = Modifier.height(8.dp))
-        Text("Presiona el botón verde para añadir un medicamento.", style = MaterialTheme.typography.bodySmall, textAlign = TextAlign.Center)
+        Text("No hay medicamentos registrados.", fontSize = 18.sp, color = Color.Gray)
+        Text("Usa el botón '+' para añadir el primero.", textAlign = TextAlign.Center, color = Color.Gray)
     }
 }
 
 @Composable
 fun TarjetaMedicamento(medInfo: MedicamentoDisplayInfo, onClick: () -> Unit) {
     Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .clickable(onClick = onClick),
-        elevation = CardDefaults.cardElevation(4.dp)
+        modifier = Modifier.fillMaxWidth().clickable(onClick = onClick),
+        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
     ) {
-        Column(modifier = Modifier.padding(16.dp)) {
-            // Nombre del medicamento con ícono
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                Icon(
-                    Icons.Default.Medication,
-                    contentDescription = "Icono de pastilla",
-                    modifier = Modifier.size(40.dp)
-                )
-                Spacer(modifier = Modifier.width(16.dp))
-                Text(medInfo.medicamento.nombre, style = MaterialTheme.typography.titleLarge)
+        Row(modifier = Modifier.padding(16.dp).fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+            Column(modifier = Modifier.weight(1f)) {
+                Text(medInfo.medicamento.nombre, fontWeight = FontWeight.Bold, fontSize = 18.sp)
+                Spacer(modifier = Modifier.height(4.dp))
+                Text("Próxima toma en: ${medInfo.tiempoRestante}", color = MaterialTheme.colorScheme.primary, fontSize = 16.sp)
             }
-
-            Spacer(modifier = Modifier.height(16.dp))
-
-            // --- Tiempo restante para la siguiente toma ---
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFFE0B2)),
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        "Tiempo restante para la siguiente toma:",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    Row(verticalAlignment = Alignment.Top) {
-                        Icon(Icons.Default.AccessTime, contentDescription = null)
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Column {
-                            medInfo.tiempoRestante.split(", ").forEach { toma ->
-                                Text(
-                                    text = toma,
-                                    style = MaterialTheme.typography.headlineMedium,
-                                    fontWeight = FontWeight.Bold,
-                                    lineHeight = 24.sp
-                                )
-                            }
-                        }
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.height(12.dp))
-
-            // --- Próximas tomas ---
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f))
-            ) {
-                Column(modifier = Modifier.padding(12.dp)) {
-                    Text(
-                        "Próximas horas de tratamiento:",
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    medInfo.proximasTomas.split(", ").forEach { hora ->
-                        Text(
-                            text = hora,
-                            style = MaterialTheme.typography.bodyMedium,
-                            lineHeight = 20.sp
-                        )
-                    }
-                }
-            }
+            Icon(Icons.Default.ChevronRight, contentDescription = "Ver detalles")
         }
     }
 }
-
-
 
 @Composable
 fun DialogoExito(onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
-        icon = { Icon(Icons.Default.CheckCircle, contentDescription = null, tint = Color(0xFF388E3C), modifier = Modifier.size(48.dp)) },
-        title = { Text("¡Medicamento añadido con éxito!", textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
-        text = { Text("El medicamento ha sido guardado correctamente y ya aparece en tu lista.", textAlign = TextAlign.Center) },
-        confirmButton = {
-            Row(modifier = Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                Button(onClick = onDismiss, colors = ButtonDefaults.buttonColors(containerColor = Color(0xFF388E3C))) {
-                    Text("Aceptar")
-                }
-            }
-        }
+        title = { Text("¡Éxito!") },
+        text = { Text("El medicamento se ha guardado correctamente.") },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("Aceptar") } }
     )
-}
-
-@Composable
-private fun mostrarConfirmacionEliminar(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("Confirmar Eliminación") },
-        text = { Text("¿Estás seguro de que deseas eliminar este medicamento? Esta acción no se puede deshacer.") },
-        confirmButton = {
-            Button(
-                onClick = onConfirm,
-                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.error)
-            ) {
-                Text("Eliminar")
-            }
-        },
-        dismissButton = {
-            Button(onClick = onDismiss) {
-                Text("Cancelar")
-            }
-        }
-    )
-}
-
-@Composable
-private fun InfoCard(
-    label: String,
-    value: String,
-    icon: ImageVector,
-    isHighlighted: Boolean = false
-) {
-    val backgroundColor = if (isHighlighted) Color(0xFFFFE0B2) else MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-
-    Card(
-        modifier = Modifier.fillMaxWidth(),
-        colors = CardDefaults.cardColors(containerColor = backgroundColor)
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(icon, contentDescription = null, modifier = Modifier.size(32.dp))
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(label, style = MaterialTheme.typography.bodySmall)
-                Spacer(modifier = Modifier.height(4.dp))
-                Text(value, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
-            }
-        }
-    }
 }

@@ -1,10 +1,11 @@
-// En: /app/src/main/java/com/example/movilsecure_v/viewmodel/PerfilVM.kt
-
+// Archivo: app/src/main/java/com/example/movilsecure_v/viewmodel/PerfilVM.kt
 package com.example.movilsecure_v.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.movilsecure_v.modelo.entidades.Medicamento
 import com.example.movilsecure_v.modelo.entidades.PerfilAdultoMayor
+import com.example.movilsecure_v.modelo.repositorio.RepositorioMedicamentos
 import com.example.movilsecure_v.modelo.repositorio.RepositorioPerfil
 import com.example.movilsecure_v.modelo.servicios.ServicioPerfil
 import kotlinx.coroutines.flow.*
@@ -27,7 +28,6 @@ data class PerfilUiState(
     // Control para UI
     val menuSangreAbierto: Boolean = false,
     val listaTiposDeSangre: List<String> = listOf("A+", "A-", "B+", "B-", "AB+", "AB-", "O+", "O-"),
-    // CAMBIO: Añadimos estado para el menú de Sexo
     val menuSexoAbierto: Boolean = false,
     val listaSexos: List<String> = listOf("Masculino", "Femenino", "Otro"),
     val mostrandoFormulario: Boolean = false,
@@ -41,7 +41,9 @@ data class PerfilUiState(
 
 class PerfilVM(
     private val repositorio: RepositorioPerfil,
-    private val servicio: ServicioPerfil
+    private val servicio: ServicioPerfil,
+    // CAMBIO: Añadir el repositorio de medicamentos para poder guardar
+    private val repositorioMedicamentos: RepositorioMedicamentos
 ) : ViewModel() {
 
     val perfilesRegistrados: StateFlow<List<PerfilAdultoMayor>> = repositorio.todosLosPerfiles
@@ -61,7 +63,6 @@ class PerfilVM(
     fun onSexoChange(sexo: String) { _uiState.update { it.copy(sexo = sexo) } }
     fun onHistorialMedicoChange(historial: String) { _uiState.update { it.copy(historialMedico = historial) } }
     fun onTipoDeSangreChange(sangre: String) { _uiState.update { it.copy(tipoDeSangre = sangre, menuSangreAbierto = false) } }
-    // CAMBIO: onMedicamentosChange ya no es necesario
     fun onAlergiasChange(alergias: String) { _uiState.update { it.copy(alergias = alergias) } }
     fun onMenuSangreDismissRequest(abierto: Boolean) { _uiState.update { it.copy(menuSangreAbierto = abierto) } }
 
@@ -69,19 +70,9 @@ class PerfilVM(
         _uiState.update { it.copy(menuSexoAbierto = abierto) }
     }
 
-    /**
-     * Maneja la selección del menú desplegable de sexo.
-     * Si se elige "Otro", limpia el campo para que el usuario pueda escribir.
-     */
     fun onSexoSeleccionado(seleccion: String) {
         val nuevoValorSexo = if (seleccion == "Otro") "" else seleccion
         _uiState.update { it.copy(sexo = nuevoValorSexo, menuSexoAbierto = false) }
-    }
-
-    fun onAgregarMedicamento(nombreMedicamento: String) {
-        _uiState.update {
-            it.copy(medicamentosActuales = it.medicamentosActuales + nombreMedicamento)
-        }
     }
 
     fun onEliminarMedicamento(nombreMedicamento: String) {
@@ -97,7 +88,26 @@ class PerfilVM(
     fun onOcultarFormularioMedicamento() {
         _uiState.update { it.copy(mostrandoFormularioMedicamento = false) }
     }
-    // ---
+
+    /**
+     * CAMBIO CLAVE: Guarda el medicamento en la DB y actualiza el perfil.
+     */
+    fun guardarMedicamentoYActualizarPerfil(medicamento: Medicamento) {
+        viewModelScope.launch {
+            // 1. Guardar el medicamento en su propia tabla a través de su repositorio
+            repositorioMedicamentos.GuardarDatosMedicamento(medicamento)
+
+            // 2. Añadir el nombre a la lista del perfil actual
+            _uiState.update {
+                it.copy(
+                    medicamentosActuales = it.medicamentosActuales + medicamento.nombre,
+                    mostrandoFormularioMedicamento = false // Cierra el diálogo
+                )
+            }
+        }
+    }
+
+    // --- Flujo Principal ---
 
     fun onMostrarFormulario() {
         limpiarCamposFormulario()
@@ -120,7 +130,6 @@ class PerfilVM(
                 sexo = perfil.sexo,
                 historialMedico = perfil.historialMedico,
                 tipoDeSangre = perfil.tipoDeSangre,
-                // CAMBIO: Convertir el String de la DB a una lista para la UI
                 medicamentosActuales = perfil.medicamentosActuales.split(",").map { med -> med.trim() }.filter { med -> med.isNotEmpty() },
                 alergias = perfil.alergias,
                 idPerfilEditando = perfil.id,
@@ -138,7 +147,6 @@ class PerfilVM(
             sexo = currentState.sexo.trim(),
             historialMedico = currentState.historialMedico.trim(),
             tipoDeSangre = currentState.tipoDeSangre,
-            // CAMBIO: Convertir la lista de la UI a un String para la DB
             medicamentosActuales = currentState.medicamentosActuales.joinToString(separator = ", "),
             alergias = currentState.alergias.trim()
         )
@@ -179,7 +187,6 @@ class PerfilVM(
                 sexo = "",
                 historialMedico = "",
                 tipoDeSangre = "",
-                // CAMBIO: Limpiar la lista
                 medicamentosActuales = emptyList(),
                 alergias = "",
                 idPerfilEditando = null
@@ -187,7 +194,6 @@ class PerfilVM(
         }
     }
 
-    // ... (calcularEdad se mantiene igual)
     fun calcularEdad(fechaNacimiento: String): Int? {
         return try {
             val formatter = DateTimeFormatter.ofPattern("d/M/yyyy")
