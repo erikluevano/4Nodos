@@ -554,7 +554,6 @@ fun MuestraLista(
 
 @Composable
 fun HistoryItemCard(historyItem: RegistroHistorial, onItemClick: () -> Unit) {
-    // <-- CAMBIO 1: SEPARAR FECHA Y HORA PARA MEJOR FORMATO -->
     val (formattedDate, formattedTime) = try {
         val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         val date = parser.parse(historyItem.fecha)!!
@@ -601,7 +600,6 @@ fun HistoryItemCard(historyItem: RegistroHistorial, onItemClick: () -> Unit) {
             Divider()
             Spacer(modifier = Modifier.height(16.dp))
 
-            // <-- CAMBIO 2: ELIMINAR TRANSPORTE Y REESTRUCTURAR FECHA/HORA -->
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
@@ -632,7 +630,6 @@ fun MostrarDetalle(
     onDismiss: () -> Unit,
     onStartNavigation: () -> Unit
 ) {
-    // <-- CAMBIO 3: FORMATEAR FECHA Y HORA PARA LA VISTA DE DETALLE -->
     val (formattedDate, formattedTime) = try {
         val parser = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss", Locale.getDefault())
         val date = parser.parse(historyItem.fecha)!!
@@ -696,7 +693,6 @@ fun MostrarDetalle(
 
                 Spacer(modifier = Modifier.height(24.dp))
 
-                // <-- CAMBIO 4: REEMPLAZAR SECCIÓN DE FECHA Y ELIMINAR TRANSPORTE -->
                 Column(modifier = Modifier.fillMaxWidth()) {
                     Text(
                         "Fecha y hora del registro",

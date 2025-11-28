@@ -1,3 +1,5 @@
+// En: /app/src/main/java/com/example/movilsecure_v/modelo/entidades/PerfilAdultoMayor.kt
+
 package com.example.movilsecure_v.modelo.entidades
 
 import androidx.room.Entity
@@ -21,7 +23,6 @@ data class PerfilAdultoMayor(
                 fechaNacimiento.isNotBlank() &&
                 sexo.isNotBlank() &&
                 tipoDeSangre.isNotBlank() &&
-                medicamentosActuales.isNotBlank() &&
                 alergias.isNotBlank()
     }
 }

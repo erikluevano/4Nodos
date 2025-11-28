@@ -14,6 +14,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.FocusDirection
@@ -124,12 +126,20 @@ fun MostrarListaInicial(lista: List<MedicamentoDisplayInfo>, onMedicamentoClick:
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MostrarFormulario(uiState: MedicamentosGlobalState, viewModel: MedicamentosViewModel, onDismiss: () -> Unit) {
+// CAMBIO: Añadir el nuevo parámetro onMedicamentoGuardado
+fun MostrarFormulario(
+    uiState: MedicamentosGlobalState,
+    viewModel: MedicamentosViewModel,
+    onDismiss: () -> Unit,
+    onMedicamentoGuardado: ((Medicamento) -> Unit)? = null // Hacemos el callback opcional
+) {
     var tipoMenuAbierto by remember { mutableStateOf(false) }
     val focusManager = LocalFocusManager.current
 
     fun EnviarDatosFormulario(medicamento: Medicamento) {
         viewModel.EnviarFormularioRegistro(medicamento)
+        // CAMBIO: Llamar al callback si existe
+        onMedicamentoGuardado?.invoke(medicamento)
     }
 
     Dialog(onDismissRequest = onDismiss) {
@@ -219,10 +229,11 @@ fun MostrarFormulario(uiState: MedicamentosGlobalState, viewModel: MedicamentosV
                             viewModel.mostrarMensajeError("El formato de la hora debe ser HH:MM.")
                         } else {
                             val nuevoMedicamento = Medicamento(
-                                nombre = uiState.nombre, tipoMedicamento = uiState.tipoMedicamento, 
-                                horaInicio = uiState.horaInicio, frecuencia = uiState.frecuencia, 
+                                nombre = uiState.nombre, tipoMedicamento = uiState.tipoMedicamento,
+                                horaInicio = uiState.horaInicio, frecuencia = uiState.frecuencia,
                                 notificacionesActivas = uiState.activarNotificaciones
                             )
+                            // La llamada a EnviarDatosFormulario ahora también ejecutará el callback
                             EnviarDatosFormulario(nuevoMedicamento)
                         }
                     },

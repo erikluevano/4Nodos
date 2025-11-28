@@ -1,19 +1,21 @@
+// Archivo: C:/workspace/4nodos/4Nodos/app/src/main/java/com/example/movilsecure_v/vista/ui/FormPerfilUI.kt
 package com.example.movilsecure_v.vista.ui
 
 import android.app.DatePickerDialog
 import android.widget.DatePicker
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material3.*
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.runtime.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.setValue
@@ -30,12 +32,12 @@ import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.movilsecure_v.modelo.basedatos.AppDatabase
 import com.example.movilsecure_v.modelo.entidades.PerfilAdultoMayor
+import com.example.movilsecure_v.modelo.repositorio.RepositorioMedicamentos
 import com.example.movilsecure_v.modelo.repositorio.RepositorioPerfil
 import com.example.movilsecure_v.modelo.servicios.ServicioPerfil
+import com.example.movilsecure_v.viewmodel.MedicamentosViewModel
 import com.example.movilsecure_v.viewmodel.PerfilUiState
 import com.example.movilsecure_v.viewmodel.PerfilVM
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.filled.Check
 import java.util.Calendar
 
 /**
@@ -60,14 +62,10 @@ class FormPerfilUI(val viewModel: PerfilVM) {
 fun PerfilScreen(modifier: Modifier = Modifier) {
     val context = LocalContext.current
 
-    // Instanciación manual de dependencias. Se elimina el ViewModelFactory.
-    // 'remember' asegura que no se re-creen en cada recomposición.
-    val repositorio = remember { RepositorioPerfil(AppDatabase.getDatabase(context).perfilDao()) }
-    val servicio = remember { ServicioPerfil(repositorio) }
-
-    // El composable `viewModel()` se encarga de proveer la instancia de PerfilVM
-    // atada al ciclo de vida correcto y la crea usando nuestra lógica.
-    val viewModel: PerfilVM = viewModel { PerfilVM(repositorio, servicio) }
+    // --- Dependencias para PerfilVM ---
+    val repositorioPerfil = remember { RepositorioPerfil(AppDatabase.getDatabase(context).perfilDao()) }
+    val servicioPerfil = remember { ServicioPerfil(repositorioPerfil) }
+    val viewModel: PerfilVM = viewModel { PerfilVM(repositorioPerfil, servicioPerfil) }
 
     val formPerfilUI = remember { FormPerfilUI(viewModel) }
     val uiState by viewModel.uiState.collectAsState()
@@ -90,6 +88,26 @@ fun PerfilScreen(modifier: Modifier = Modifier) {
         )
     }
 
+    // CAMBIO: Integración del formulario de medicamentos como un diálogo
+    if (uiState.mostrandoFormularioMedicamento) {
+        // --- Dependencias para MedicamentosViewModel (necesarias para el diálogo) ---
+        val medDao = remember { AppDatabase.getDatabase(context).medicamentosDAO() }
+        val medRepo = remember { RepositorioMedicamentos(medDao) }
+        val medViewModel: MedicamentosViewModel = viewModel { MedicamentosViewModel(medRepo) }
+        val medUiState by medViewModel.uiState.collectAsState()
+
+        MostrarFormulario(
+            uiState = medUiState,
+            viewModel = medViewModel,
+            onDismiss = { viewModel.onOcultarFormularioMedicamento() },
+            onMedicamentoGuardado = { nuevoMedicamento ->
+                viewModel.onAgregarMedicamento(nuevoMedicamento.nombre) // Añade el nombre al perfil
+                medViewModel.ocultarFormulario() // Oculta el formulario del medicamento
+                viewModel.onOcultarFormularioMedicamento() // Cierra el estado de mostrar el diálogo
+            }
+        )
+    }
+
     Scaffold(
         modifier = modifier,
         snackbarHost = { SnackbarHost(snackbarHostState) }
@@ -108,14 +126,12 @@ fun PerfilScreen(modifier: Modifier = Modifier) {
                 onEditarPerfil = { viewModel.iniciarEdicion(it) },
                 onEliminarPerfil = { viewModel.eliminarPerfil(it) },
                 calcularEdad = viewModel::calcularEdad
-
             )
         }
     }
 }
 
 // --- El resto de los Composables (VistaPrincipal, Formulario, Tarjeta, etc.) ---
-// Se modifican para usar las nuevas llamadas y dependencias.
 
 @Composable
 fun VistaPrincipalPerfil(
@@ -131,13 +147,10 @@ fun VistaPrincipalPerfil(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         item {
-            // Si no hay perfiles, muestra la tarjeta de invitación para registrar.
             if (perfiles.isEmpty()) {
                 TarjetaRegistro(onRegistrarClick = formUI::mostrarOpcionRegistrar)
             }
         }
-
-        // Muestra la lista de perfiles registrados.
         items(perfiles, key = { it.id }) { perfil ->
             TarjetaPerfil(
                 perfil = perfil,
@@ -186,7 +199,6 @@ fun TarjetaPerfil(
     onEliminar: () -> Unit,
     modifier: Modifier = Modifier,
     calcularEdad: (String) -> Int?
-
 ) {
     var mostrarDialogoEliminar by remember { mutableStateOf(false) }
 
@@ -196,26 +208,19 @@ fun TarjetaPerfil(
             title = { Text("Confirmar Eliminación") },
             text = { Text("¿Estás seguro de que deseas eliminar el perfil de ${perfil.nombre}?") },
             confirmButton = {
-                TextButton(
-                    onClick = {
-                        onEliminar()
-                        mostrarDialogoEliminar = false
-                    }
-                ) {
-                    Text("Eliminar")
-                }
+                TextButton(onClick = {
+                    onEliminar()
+                    mostrarDialogoEliminar = false
+                }) { Text("Eliminar") }
             },
             dismissButton = {
-                TextButton(onClick = { mostrarDialogoEliminar = false }) {
-                    Text("Cancelar")
-                }
+                TextButton(onClick = { mostrarDialogoEliminar = false }) { Text("Cancelar") }
             }
         )
     }
 
     Card(modifier = modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(16.dp)) {
-            // --- Cabecera con Nombre y Botones ---
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Text(
                     text = perfil.nombre,
@@ -225,36 +230,23 @@ fun TarjetaPerfil(
                 )
                 IconButton(onClick = onEdit) { Icon(Icons.Default.Edit, "Editar Perfil") }
                 IconButton(onClick = { mostrarDialogoEliminar = true }) {
-                    Icon(
-                        Icons.Default.Delete,
-                        "Eliminar Perfil",
-                        tint = MaterialTheme.colorScheme.error
-                    )
+                    Icon(Icons.Default.Delete, "Eliminar Perfil", tint = MaterialTheme.colorScheme.error)
                 }
             }
             Spacer(modifier = Modifier.height(8.dp))
 
-            // --- Fila de Información Rápida (Edad, Sexo, Sangre) ---
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 val edad = calcularEdad(perfil.fechaNacimiento)
-                InfoRapida(
-                    icon = Icons.Default.CalendarToday,
-                    text = if (edad != null) "$edad años" else "N/A"
-                )
+                InfoRapida(icon = Icons.Default.CalendarToday, text = if (edad != null) "$edad años" else "N/A")
                 InfoRapida(icon = Icons.Default.Person, text = perfil.sexo)
                 InfoRapida(icon = Icons.Default.Bloodtype, text = perfil.tipoDeSangre)
             }
-            HorizontalDivider(
-                modifier = Modifier.padding(vertical = 16.dp),
-                thickness = DividerDefaults.Thickness,
-                color = DividerDefaults.color
-            )
+            HorizontalDivider(modifier = Modifier.padding(vertical = 16.dp))
 
-            // --- Sección de Detalles Médicos ---
             Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 InfoItem(
                     icon = Icons.Default.FavoriteBorder,
@@ -264,13 +256,13 @@ fun TarjetaPerfil(
                 InfoItem(
                     icon = Icons.Default.Medication,
                     title = "Medicamentos actuales",
-                    detail = perfil.medicamentosActuales
+                    detail = perfil.medicamentosActuales.ifEmpty { "Ninguno" }
                 )
                 InfoItem(
                     icon = Icons.Default.ReportProblem,
                     title = "Alergias",
                     detail = perfil.alergias,
-                    detailColor = MaterialTheme.colorScheme.error // Color rojo para alergias
+                    detailColor = MaterialTheme.colorScheme.error
                 )
             }
         }
@@ -287,23 +279,12 @@ private fun InfoRapida(icon: ImageVector, text: String) {
             tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
         Spacer(modifier = Modifier.width(4.dp))
-        Text(
-            text = text,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
+        Text(text = text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
     }
 }
 
-
-
 @Composable
-fun InfoItem(
-    icon: ImageVector,
-    title: String,
-    detail: String,
-    detailColor: Color = Color.Unspecified
-) {
+fun InfoItem(icon: ImageVector, title: String, detail: String, detailColor: Color = Color.Unspecified) {
     Column {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Icon(
@@ -313,11 +294,7 @@ fun InfoItem(
                 modifier = Modifier.size(20.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
-            Text(
-                text = title,
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.SemiBold
-            )
+            Text(text = title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.SemiBold)
         }
         Spacer(modifier = Modifier.height(4.dp))
         Text(
@@ -330,7 +307,7 @@ fun InfoItem(
 }
 
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 private fun FormularioPerfil(modifier: Modifier = Modifier, formUI: FormPerfilUI, uiState: PerfilUiState) {
     val context = LocalContext.current
@@ -370,7 +347,51 @@ private fun FormularioPerfil(modifier: Modifier = Modifier, formUI: FormPerfilUI
             )
         )
 
-        OutlinedTextField(value = uiState.sexo, onValueChange = formUI.viewModel::onSexoChange, label = { Text("Sexo *") }, modifier = Modifier.fillMaxWidth())
+        // --- CAMBIO: Reemplazo del campo de texto de Sexo por un menú desplegable ---
+        val sexoSeleccionado = when {
+            uiState.sexo in uiState.listaSexos.dropLast(1) -> uiState.sexo
+            else -> "Otro"
+        }
+
+        ExposedDropdownMenuBox(
+            expanded = uiState.menuSexoAbierto,
+            onExpandedChange = { formUI.viewModel.onMenuSexoDismissRequest(!uiState.menuSexoAbierto) }
+        ) {
+            OutlinedTextField(
+                value = sexoSeleccionado,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("Sexo *") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = uiState.menuSexoAbierto) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor()
+            )
+            ExposedDropdownMenu(
+                expanded = uiState.menuSexoAbierto,
+                onDismissRequest = { formUI.viewModel.onMenuSexoDismissRequest(false) }
+            ) {
+                uiState.listaSexos.forEach { sexo ->
+                    DropdownMenuItem(
+                        text = { Text(sexo) },
+                        onClick = { formUI.viewModel.onSexoSeleccionado(sexo) }
+                    )
+                }
+            }
+        }
+
+        if (sexoSeleccionado == "Otro") {
+            Spacer(modifier = Modifier.height(4.dp))
+            OutlinedTextField(
+                value = uiState.sexo,
+                onValueChange = formUI.viewModel::onSexoChange,
+                label = { Text("Especificar sexo") },
+                modifier = Modifier.fillMaxWidth()
+            )
+        }
+        // --- FIN DEL CAMBIO ---
+
+
         Text("Información Médica", style = MaterialTheme.typography.titleMedium)
 
         ExposedDropdownMenuBox(
@@ -396,7 +417,57 @@ private fun FormularioPerfil(modifier: Modifier = Modifier, formUI: FormPerfilUI
         }
 
         OutlinedTextField(value = uiState.historialMedico, onValueChange = formUI.viewModel::onHistorialMedicoChange, label = { Text("Historial médico (Opcional)") }, modifier = Modifier.fillMaxWidth())
-        OutlinedTextField(value = uiState.medicamentosActuales, onValueChange = formUI.viewModel::onMedicamentosChange, label = { Text("Medicamentos actuales *") }, modifier = Modifier.fillMaxWidth())
+
+        // CAMBIO: Reemplazo del campo de texto de medicamentos por un gestor interactivo
+        Text("Medicamentos actuales", style = MaterialTheme.typography.bodyMedium, fontWeight = FontWeight.SemiBold)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .border(1.dp, MaterialTheme.colorScheme.outline, RoundedCornerShape(4.dp))
+                .padding(12.dp)
+        ) {
+            if (uiState.medicamentosActuales.isEmpty()) {
+                Text(
+                    "No hay medicamentos añadidos.",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            } else {
+                FlowRow(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    uiState.medicamentosActuales.forEach { nombreMedicamento ->
+                        InputChip(
+                            selected = false,
+                            onClick = { /* No action needed on click */ },
+                            label = { Text(nombreMedicamento) },
+                            trailingIcon = {
+                                Icon(
+                                    imageVector = Icons.Default.Close,
+                                    contentDescription = "Eliminar medicamento",
+                                    modifier = Modifier
+                                        .size(18.dp)
+                                        .clickable { formUI.viewModel.onEliminarMedicamento(nombreMedicamento) }
+                                )
+                            }
+                        )
+                    }
+                }
+            }
+            Spacer(modifier = Modifier.height(12.dp))
+            Button(
+                onClick = { formUI.viewModel.onMostrarFormularioMedicamento() },
+                modifier = Modifier.align(Alignment.End)
+            ) {
+                Icon(Icons.Default.Add, contentDescription = null)
+                Spacer(modifier = Modifier.width(8.dp))
+                Text("Añadir")
+            }
+        }
+        // --- FIN DEL CAMBIO ---
+
         OutlinedTextField(value = uiState.alergias, onValueChange = formUI.viewModel::onAlergiasChange, label = { Text("Alergias *") }, modifier = Modifier.fillMaxWidth())
         Spacer(modifier = Modifier.height(16.dp))
 
@@ -413,7 +484,7 @@ fun DialogoExito(mensaje: String, onDismiss: () -> Unit) {
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(horizontal = 16.dp), //
+                .padding(horizontal = 16.dp),
             shape = RoundedCornerShape(16.dp),
         ) {
             Column(
@@ -421,7 +492,6 @@ fun DialogoExito(mensaje: String, onDismiss: () -> Unit) {
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(16.dp)
             ) {
-                // 1. Icono con fondo circular
                 Box(
                     modifier = Modifier
                         .size(64.dp)
@@ -445,7 +515,7 @@ fun DialogoExito(mensaje: String, onDismiss: () -> Unit) {
                 )
 
                 Text(
-                    text = "Los datos del adulto mayor han sido modificados con exito",
+                    text = "Los datos del adulto mayor han sido modificados con éxito",
                     style = MaterialTheme.typography.bodyMedium,
                     textAlign = TextAlign.Center,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
@@ -459,20 +529,6 @@ fun DialogoExito(mensaje: String, onDismiss: () -> Unit) {
                 ) {
                     Text("Continuar")
                 }
-            }
-        }
-    }
-}
-
-@Composable
-fun InfoItem(icon: ImageVector, title: String, detail: String) {
-    if (detail.isNotBlank()) {
-        Row(modifier = Modifier.padding(top = 8.dp)) {
-            Icon(icon, contentDescription = null, tint = MaterialTheme.colorScheme.primary)
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(title, style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold)
-                Text(detail, style = MaterialTheme.typography.bodyMedium)
             }
         }
     }
